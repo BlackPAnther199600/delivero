@@ -1,0 +1,478 @@
+.customer-orders {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 40px;
+}
+
+.header {
+  background: linear-gradient(135deg, #FF6B00 0%, #FF8C00 100%);
+  color: white;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #eee;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tab {
+  flex: 1;
+  padding: 14px 0;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: #333;
+}
+
+.tab.active {
+  color: #FF6B00;
+  border-bottom-color: #FF6B00;
+}
+
+.orders-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 50px 16px;
+}
+
+.orders-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.order-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  border-left: 4px solid #0066FF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.restaurant-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px;
+}
+
+.order-id {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-icon {
+  font-size: 14px;
+}
+
+.status-label {
+  font-size: 11px;
+}
+
+.order-details {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+  color: #666;
+}
+
+.items-count {
+  color: #666;
+}
+
+.total-price {
+  font-weight: bold;
+  color: #0066FF;
+}
+
+.timestamp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 11px;
+  color: #999;
+}
+
+.eta {
+  color: #FF6B00;
+  font-weight: 600;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.action-row button {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-track {
+  background-color: #E0ECFF;
+  color: #0066FF;
+  border: 1px solid #0066FF;
+}
+
+.btn-track:hover {
+  background-color: #C5E0FF;
+}
+
+.btn-cancel {
+  background-color: #FFE5E5;
+  color: #FF6B6B;
+  border: 1px solid #FF6B6B;
+}
+
+.btn-cancel:hover {
+  background-color: #FFC5C5;
+}
+
+.btn-rate {
+  background-color: #E8F5E9;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+}
+
+.btn-rate:hover {
+  background-color: #C8E6C9;
+}
+
+.btn-reorder {
+  background-color: #E0ECFF;
+  color: #0066FF;
+  border: 1px solid #0066FF;
+}
+
+.btn-reorder:hover {
+  background-color: #C5E0FF;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  margin: 0;
+  color: #333;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}
+
+.tracking-info {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.tracking-restaurant {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px;
+}
+
+.tracking-total {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.timeline {
+  margin: 20px 0;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-dot.active {
+  background-color: #0066FF;
+}
+
+.timeline-icon {
+  font-size: 14px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 16px;
+  top: 32px;
+  width: 2px;
+  height: 20px;
+  background-color: #ddd;
+}
+
+.timeline-line.active {
+  background-color: #0066FF;
+}
+
+.timeline-label {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.timeline-label.active {
+  color: #0066FF;
+  font-weight: 600;
+}
+
+.rider-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.rider-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px;
+}
+
+.rider-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.rider-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px;
+}
+
+.rider-rating {
+  font-size: 11px;
+  color: #666;
+  margin: 0 0 8px;
+}
+
+.btn-contact {
+  width: 100%;
+  background-color: #0066FF;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-contact:hover {
+  background-color: #0052CC;
+}
+
+.btn-close-modal {
+  width: 100%;
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.btn-close-modal:hover {
+  background-color: #e0e0e0;
+}
+
+.rating-subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.rating-stars {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.star {
+  background: transparent;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.star:hover {
+  transform: scale(1.1);
+}
+
+.note-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+
+.note-input:focus {
+  outline: none;
+  border-color: #0066FF;
+  box-shadow: 0 0 8px rgba(0, 102, 255, 0.1);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-modal-cancel,
+.btn-modal-save {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modal-cancel {
+  background-color: #ddd;
+  color: #333;
+}
+
+.btn-modal-cancel:hover {
+  background-color: #ccc;
+}
+
+.btn-modal-save {
+  background-color: #0066FF;
+  color: white;
+}
+
+.btn-modal-save:hover {
+  background-color: #0052CC;
+}
+
+@media (max-width: 768px) {
+}
