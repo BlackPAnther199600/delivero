@@ -1,4 +1,9 @@
 {
+  "name": "delivero-repo-root",
+  "private": true,
+  "scripts": {
+    "start": "node backend/src/app.js"
+  },
   "dependencies": {
     "socket.io-client": "^4.8.3"
   }
