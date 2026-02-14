@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { ordersAPI } from '../../services/api';
+import React, { useState } from 'react';
 import './CustomerHome.css';
 
 export default function CustomerHomeEnhanced() {
   const [searchText, setSearchText] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-  const [restaurants, setRestaurants] = useState([]);
   const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
 
   const foodCategories = [
@@ -31,10 +28,7 @@ export default function CustomerHomeEnhanced() {
     { id: 6, name: 'Pasticceria Dolce', category: 'Dessert', rating: 4.9, distance: 0.4, time: 5, price: '€€', reviews: 267 },
   ];
 
-  useEffect(() => {
-    setRestaurants(allRestaurants);
-    setLoading(false);
-  }, []);
+  // Local sample data is provided by `allRestaurants`
 
   const toggleFavorite = (restaurant) => {
     const isFavorited = favorites.some(f => f.id === restaurant.id);
@@ -81,19 +75,19 @@ export default function CustomerHomeEnhanced() {
         <div className="container">
           <h1 className="logo">🍽️ Delivero</h1>
           <div className="nav-tabs">
-            <button 
+            <button
               className={`nav-tab ${activeTab === 'home' ? 'active' : ''}`}
               onClick={() => setActiveTab('home')}
             >
               🏠 Home
             </button>
-            <button 
+            <button
               className={`nav-tab ${activeTab === 'favorites' ? 'active' : ''}`}
               onClick={() => setActiveTab('favorites')}
             >
               ❤️ Preferiti ({favorites.length})
             </button>
-            <button 
+            <button
               className={`nav-tab ${activeTab === 'orders' ? 'active' : ''}`}
               onClick={() => setActiveTab('orders')}
             >
