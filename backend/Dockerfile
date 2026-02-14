@@ -1,13 +1,20 @@
 # Backend Dockerfile
 FROM node:18-alpine
 
+# Use /app as container root
 WORKDIR /app
 
-COPY package*.json ./
+# Copy only backend package files from repo root to ensure correct deps are installed
+COPY backend/package*.json ./
 
-RUN npm install
+# Install backend dependencies
+RUN npm install --production
 
-COPY . .
+# Copy backend source into container
+COPY backend/ ./backend/
+
+# Set working dir to backend for runtime
+WORKDIR /app/backend
 
 EXPOSE 5000
 
