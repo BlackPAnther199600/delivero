@@ -24,21 +24,37 @@ const server = http.createServer(app);
 initializeSocket(server);
 
 // Middleware
-app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://localhost:19006",
-    "http://localhost:19007",
-    "http://localhost:19008",
-    "http://127.0.0.1:19006",
-    "http://127.0.0.1:19007",
-    "http://127.0.0.1:19008",
-    "http://localhost:5173"
+const frontendOrigin = process.env.FRONTEND_URL || "https://delivero-dubw.vercel.app";
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (like curl, mobile)
+    if (!origin) return callback(null, true);
+    if (origin === frontendOrigin) return callback(null, true);
+    return callback(new Error("CORS policy: origin not allowed"), false);
+  },
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
   ],
-  credentials: true
-}));
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Accept",
+    "X-Requested-With",
+  ],
+  credentials: true, // se usi cookie / authentication basata su cookie; altrimenti può essere false
+};
+
+app.use(cors(corsOptions));
+
+// assicurati che OPTIONS venga gestita prima dei route handlers
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 
 // Health check
