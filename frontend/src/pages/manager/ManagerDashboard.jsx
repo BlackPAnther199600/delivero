@@ -3,7 +3,7 @@ import { ordersAPI } from '../../services/api';
 
 export default function ManagerDashboard({ user }) {
   const [orders, setOrders] = useState([]);
-  const [riders, setRiders] = useState([
+  const [riders] = useState([
     { id: 1, name: 'Marco Rossi', status: 'free', currentOrders: 0, totalDeliveries: 45, rating: 4.8, lastSeen: '5 min fa' },
     { id: 2, name: 'Giovanni Bianchi', status: 'busy', currentOrders: 2, totalDeliveries: 82, rating: 4.9, lastSeen: 'Ora' },
     { id: 3, name: 'Luca Verdi', status: 'free', currentOrders: 0, totalDeliveries: 38, rating: 4.6, lastSeen: '15 min fa' },
@@ -54,13 +54,13 @@ export default function ManagerDashboard({ user }) {
   };
 
   const getRiderStatusBadge = (status) => {
-    return status === 'free' 
-      ? '🟢 Libero' 
+    return status === 'free'
+      ? '🟢 Libero'
       : '🔴 Occupato';
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'pending': return '#FFA500';
       case 'in-progress': return '#0066FF';
       case 'open': return '#FF0000';
@@ -192,7 +192,7 @@ export default function ManagerDashboard({ user }) {
               </button>
             ))}
           </div>
-          
+
           <div>
             {orders.slice(0, 10).map(order => (
               <div key={order.id} className="card" style={{ marginBottom: '1rem', borderLeft: `4px solid ${getStatusColor(order.status === 'pending' ? 'pending' : order.status === 'accepted' ? 'in-progress' : 'closed')}` }}>
@@ -221,7 +221,7 @@ export default function ManagerDashboard({ user }) {
         <div>
           <h2 className="mb-3">🎫 Centro Assistenza - Ticket</h2>
           <button className="btn btn-primary mb-3">➕ Nuovo Ticket</button>
-          
+
           <div>
             {tickets.map(ticket => (
               <div key={ticket.id} className="card" style={{ marginBottom: '1rem', borderLeft: `4px solid ${getStatusColor(ticket.status === 'open' ? 'open' : ticket.status === 'in-progress' ? 'in-progress' : 'closed')}` }}>
@@ -240,7 +240,7 @@ export default function ManagerDashboard({ user }) {
                   </div>
                 </div>
                 <p style={{ margin: '0.5rem 0', fontSize: '0.85rem', color: '#999' }}>📅 {ticket.createdAt.toLocaleString('it-IT')}</p>
-                
+
                 <button className="btn btn-outline" style={{ marginTop: '1rem', fontSize: '0.85rem', padding: '6px 12px' }}>
                   👁️ Visualizza Dettagli
                 </button>
@@ -254,7 +254,7 @@ export default function ManagerDashboard({ user }) {
       {activeTab === 'invoices' && (
         <div>
           <h2 className="mb-3">📄 Bollette e Fatture</h2>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
             {invoices.map(invoice => (
               <div key={invoice.id} className="card">

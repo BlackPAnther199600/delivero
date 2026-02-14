@@ -18,4 +18,5 @@ export function getSocket() {
     return socket;
 }
 
-export default { initSocket, getSocket };
+const socketService = { initSocket, getSocket };
+export default socketService;
