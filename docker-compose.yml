@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: delivero-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-delivero}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/config/database.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - delivero
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: delivero-backend
+    depends_on:
+      - postgres
+    environment:
+      PORT: 5000
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-delivero}
+      JWT_SECRET: ${JWT_SECRET:-your_secret_key}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FIREBASE_SERVICE_ACCOUNT_PATH: /app/firebase-key.json
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - delivero
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: delivero-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - delivero
+
+volumes:
+  postgres_data:
+
+
+networks:
+  delivero:
+    driver: bridge

@@ -1,0 +1,387 @@
+.customer-home {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+}
+
+.navbar {
+  background: linear-gradient(135deg, #FF6B00 0%, #FF8C00 100%);
+  color: white;
+  padding: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.nav-tab:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-tab.active {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid white;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.hero {
+  padding: 32px 0 24px;
+  text-align: center;
+}
+
+.hero h2 {
+  font-size: 32px;
+  margin: 0 0 8px;
+  color: #333;
+}
+
+.hero p {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+}
+
+.search-container {
+  position: relative;
+  margin: 24px 0;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 44px 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #FF6B00;
+  box-shadow: 0 2px 12px rgba(255, 107, 0, 0.15);
+}
+
+.search-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #999;
+}
+
+.promos-section {
+  margin: 24px 0;
+}
+
+.promos-section h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 12px;
+}
+
+.promos-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.promos-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.promos-carousel::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.promos-carousel::-webkit-scrollbar-thumb {
+  background: #FF6B00;
+  border-radius: 3px;
+}
+
+.promo-card {
+  background: linear-gradient(135deg, #FF6B00 0%, #FFB347 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 10px;
+  min-width: 240px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.promo-card:hover {
+  transform: translateY(-4px);
+}
+
+.promo-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.promo-code {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.filter-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.filter-bar::-webkit-scrollbar-thumb {
+  background: #FF6B00;
+}
+
+.filter-btn {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background-color: #e8e8e8;
+}
+
+.filter-btn.active {
+  background-color: #FF6B00;
+  color: white;
+  border-color: #FF6B00;
+}
+
+.categories-section {
+  margin: 32px 0;
+}
+
+.categories-section h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 16px;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.category-card {
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.category-emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.category-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.restaurants-section {
+  margin: 32px 0 48px;
+}
+
+.restaurants-section h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 16px;
+}
+
+.restaurants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.restaurant-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.restaurant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.restaurant-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 4px;
+}
+
+.restaurant-category {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.favorite-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+
+.restaurant-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.stat-badge {
+  background-color: #f5f5f5;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  text-align: center;
+}
+
+.stat-badge.time {
+  background-color: #FFE5CC;
+  color: #FF6B00;
+}
+
+.no-results {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 40px 0;
+}
+
+.favorites-section {
+  padding: 24px 0 48px;
+}
+
+.favorites-section h2 {
+  font-size: 28px;
+  margin: 0 0 24px;
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar .container {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nav-tabs {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .nav-tab {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  }
+
+  .restaurants-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h2 {
+    font-size: 24px;
+  }
+}
