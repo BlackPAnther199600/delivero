@@ -8,6 +8,15 @@ let pool;
 
 if (process.env.DATABASE_URL) {
   // Configurazione per Render + Supabase
+  console.log('Tentativo di connessione al database remoto...');
+  // Estrai solo la parte dopo @ per loggare l'host (non stampare la password)
+  try {
+    const afterAt = process.env.DATABASE_URL.split('@')[1] || process.env.DATABASE_URL;
+    console.log('Target Host:', afterAt);
+  } catch (e) {
+    console.log('Unable to parse DATABASE_URL for host preview');
+  }
+
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
