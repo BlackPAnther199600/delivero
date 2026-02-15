@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
-  ScrollView,
   Picker,
+  ScrollView,
 } from 'react-native';
 import { authAPI } from '../../services/api';
 
@@ -20,6 +20,7 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('customer');
+
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -40,7 +41,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await authAPI.register(email, password, name);
+      const response = await authAPI.register(email, password, name, role);
       Alert.alert('Successo', 'Account creato! Accedi ora');
       navigation.navigate('Login');
     } catch (error) {
@@ -160,7 +161,7 @@ export default function RegisterScreen({ navigation }) {
         {/* Info */}
         <View style={styles.info}>
           <Text style={styles.infoText}>
-            ✅ Scegli il tuo ruolo durante la registrazione
+            ✅ Registrazione standard: creerai un account cliente (o rider se abilitato)
           </Text>
           <Text style={styles.infoText}>
             ✅ I consumatori ordineranno da app mobile
