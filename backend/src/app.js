@@ -12,6 +12,7 @@ import pharmaciesRoutes from "./routes/pharmacies.js";
 import medicalTransportsRoutes from "./routes/medicalTransports.js";
 import documentPickupsRoutes from "./routes/documentPickups.js";
 import ticketsRoutes from "./routes/tickets.js";
+import restaurantsRoutes from "./routes/restaurants.js";
 import { initializeSocket } from "./services/socket.js";
 import { authenticateToken } from "./middleware/auth.js";
 
@@ -64,6 +65,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/restaurants", restaurantsRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/payments", paymentRoutes);

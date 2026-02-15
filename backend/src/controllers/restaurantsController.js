@@ -6,8 +6,11 @@ export const getRestaurants = async (req, res) => {
         const { search, category, rating_min, max_delivery_time, max_delivery_cost } = req.query;
 
         let query = `
-      SELECT id, name, rating, estimated_delivery_time, delivery_cost, image_url, 
-             description, address, latitude, longitude, is_open
+      SELECT 
+        id, name, rating, estimated_delivery_time as delivery_time, 
+        delivery_cost, image_url, description, address, 
+        latitude, longitude, is_open, 
+        (SELECT COUNT(*) FROM reviews WHERE restaurant_id = restaurants.id) as review_count
       FROM restaurants
       WHERE is_active = true
     `;
@@ -20,8 +23,8 @@ export const getRestaurants = async (req, res) => {
 
         if (category) {
             query += ` AND id IN (
-        SELECT restaurant_id FROM restaurant_categories 
-        WHERE category ILIKE $${params.length + 1}
+        SELECT DISTINCT restaurant_id FROM restaurant_categories 
+        WHERE name ILIKE $${params.length + 1} AND is_active = true
       )`;
             params.push(`%${category}%`);
         }
@@ -57,9 +60,12 @@ export const getRestaurant = async (req, res) => {
 
         // Get restaurant details
         const restaurantRes = await db.query(
-            `SELECT id, name, rating, estimated_delivery_time, delivery_cost, image_url, 
-              description, address, latitude, longitude, is_open, phone, website
-       FROM restaurants WHERE id = $1`,
+            `SELECT 
+              id, name, rating, estimated_delivery_time as delivery_time, 
+              delivery_cost, image_url, description, address, 
+              latitude, longitude, is_open, phone, website
+       FROM restaurants 
+       WHERE id = $1 AND is_active = true`,
             [id]
         );
 
