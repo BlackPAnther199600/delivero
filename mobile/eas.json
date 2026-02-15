@@ -6,6 +6,9 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "GRADLE_OPTS": "-Dkotlin.compiler.suppressKotlinVersionCompatibilityCheck=true"
       }
     },
     "preview2": {
@@ -23,7 +26,8 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
+        "GRADLE_OPTS": "-Dkotlin.compiler.suppressKotlinVersionCompatibilityCheck=true"
       }
     }
   },
