@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ordersAPI } from '../../services/api';
+import useRiderLocationSender from '../../hooks/useRiderLocationSender';
 
 const CATEGORY_EMOJI = {
   food: '🍔',
@@ -48,6 +49,10 @@ export default function RiderActiveScreen({ navigation }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [rating, setRating] = useState(0);
   const [ratingNote, setRatingNote] = useState('');
+  const [trackingActiveOrderId, setTrackingActiveOrderId] = useState(null);
+
+  // Enable location tracking for the first active order
+  const locationTracking = useRiderLocationSender(trackingActiveOrderId, trackingActiveOrderId ? 'in_transit' : null);
 
   useEffect(() => {
     loadActiveOrders();
@@ -65,7 +70,11 @@ export default function RiderActiveScreen({ navigation }) {
       const completedOrders = (response || []).filter(
         order => order.status === 'delivered' || order.status === 'rated'
       );
-      
+
+      // Enable location tracking for first in_transit/pickup order
+      const inTransitOrder = activeOrders.find(o => o.status === 'in_transit' || o.status === 'pickup');
+      setTrackingActiveOrderId(inTransitOrder?.id || null);
+
       setOrders(response || []);
       setStats({
         active: activeOrders.length,
@@ -115,7 +124,7 @@ export default function RiderActiveScreen({ navigation }) {
       Alert.alert('Attenzione', 'Seleziona una valutazione');
       return;
     }
-    
+
     try {
       await ordersAPI.rateOrder(selectedOrder.id, {
         rating,
@@ -142,7 +151,7 @@ export default function RiderActiveScreen({ navigation }) {
 
   const getFilteredOrders = () => {
     if (activeTab === 'active') {
-      return orders.filter(o => 
+      return orders.filter(o =>
         o.status === 'accepted' || o.status === 'pickup' || o.status === 'in_transit'
       );
     } else if (activeTab === 'completed') {
@@ -171,6 +180,9 @@ export default function RiderActiveScreen({ navigation }) {
           <Text style={styles.statsHeader}>
             {stats.active} attive • {stats.completed} completate
           </Text>
+          {locationTracking.isLocating && (
+            <Text style={styles.trackingBadge}>📍 Tracciamento GPS attivo</Text>
+          )}
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>🚪</Text>
@@ -184,13 +196,13 @@ export default function RiderActiveScreen({ navigation }) {
           <Text style={styles.statValue}>{stats.active}</Text>
           <Text style={styles.statLabel}>Attive</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>✅</Text>
           <Text style={styles.statValue}>{stats.completed}</Text>
           <Text style={styles.statLabel}>Completate</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>💰</Text>
           <Text style={styles.statValue}>€{stats.earnings.toFixed(2)}</Text>
@@ -230,7 +242,7 @@ export default function RiderActiveScreen({ navigation }) {
             {activeTab === 'active' ? 'Nessuna consegna in corso!' : 'Nessun completamento'}
           </Text>
           <Text style={styles.emptySubtext}>
-            {activeTab === 'active' 
+            {activeTab === 'active'
               ? "Vai alla schermata 'Home' per accettare ordini"
               : 'I tuoi ordini completati appariranno qui'}
           </Text>
@@ -349,7 +361,7 @@ export default function RiderActiveScreen({ navigation }) {
             <Text style={styles.modalSubtitle}>
               Come è andato con {selectedOrder?.customer_name}?
             </Text>
-            
+
             <View style={styles.ratingStars}>
               {[1, 2, 3, 4, 5].map(star => (
                 <TouchableOpacity
@@ -407,7 +419,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-      },
+  },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
@@ -729,5 +741,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
+  },
+  trackingBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0066FF',
+    marginTop: 4,
   },
 });

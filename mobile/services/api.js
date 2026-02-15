@@ -1,10 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { io } from 'socket.io-client';
 
 // Backend configuration
 // Web dev: localhost | Mobile/APK: production backend
 const API_URL = __DEV__ && typeof window !== 'undefined'
   ? 'http://localhost:5000/api'
   : 'https://delivero-gyjx.onrender.com/api';
+
+const SOCKET_URL = __DEV__ && typeof window !== 'undefined'
+  ? 'http://localhost:5000'
+  : 'https://delivero-gyjx.onrender.com';
+
+let socket = null;
 
 // Helper di fetch con interceptor per il token
 async function makeRequest(endpoint, options = {}) {
@@ -36,11 +43,127 @@ async function makeRequest(endpoint, options = {}) {
   }
 }
 
+// WebSocket tracking initialization
+export const initializeTrackingSocket = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      console.warn('No token available for socket connection');
+      return null;
+    }
+
+    if (socket && socket.connected) {
+      return socket;
+    }
+
+    socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
+
+    socket.on('connect', () => {
+      console.log('✓ Connected to tracking socket');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('✗ Disconnected from tracking socket');
+    });
+
+    socket.on('error', (err) => {
+      console.error('Socket error:', err);
+    });
+
+    return socket;
+  } catch (error) {
+    console.error('Failed to initialize tracking socket:', error);
+    return null;
+  }
+};
+
+// Join order tracking channel
+export const joinOrderTracking = async (orderId) => {
+  try {
+    const sock = socket || (await initializeTrackingSocket());
+    if (!sock) {
+      throw new Error('Socket not initialized');
+    }
+    sock.emit('joinOrderTracking', orderId);
+  } catch (error) {
+    console.error('Failed to join order tracking:', error);
+    throw error;
+  }
+};
+
+// Leave order tracking channel
+export const leaveOrderTracking = (orderId) => {
+  try {
+    if (!socket) return;
+    socket.emit('leaveOrderTracking', orderId);
+  } catch (error) {
+    console.error('Failed to leave order tracking:', error);
+  }
+};
+
+// Subscribe to location updates
+export const onRiderLocationUpdate = (callback) => {
+  if (!socket) return () => { };
+  socket.off('riderLocationUpdate'); // remove previous listeners
+  socket.on('riderLocationUpdate', callback);
+  return () => socket.off('riderLocationUpdate');
+};
+
+// Subscribe to order status updates  
+export const onOrderStatusUpdate = (callback) => {
+  if (!socket) return () => { };
+  socket.off('orderStatusUpdate');
+  socket.on('orderStatusUpdate', callback);
+  return () => socket.off('orderStatusUpdate');
+};
+
+// Subscribe to tracking stopped (after delivery)
+export const onTrackingStopped = (callback) => {
+  if (!socket) return () => { };
+  socket.off('trackingStopped');
+  socket.on('trackingStopped', callback);
+  return () => socket.off('trackingStopped');
+};
+
+// Calculate straight-line distance between two points (Haversine formula)
+export const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (v) => (v * Math.PI) / 180;
+  const R = 6371000; // meters
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // meters
+};
+
+// Calculate ETA based on distance and speed
+export const calculateETA = (distanceMeters, speedMPS = 10) => {
+  // Default speed ~36 km/h = 10 m/s (typical city delivery)
+  const seconds = distanceMeters / speedMPS;
+  const minutes = Math.ceil(seconds / 60);
+  return Math.max(1, minutes); // at least 1 minute
+};
+
+// Disconnect socket
+export const disconnectTrackingSocket = () => {
+  if (socket && socket.connected) {
+    socket.disconnect();
+    socket = null;
+  }
+};
+
 export const authAPI = {
-  register: async (email, password, name) => {
+  register: async (email, password, name, role = 'customer') => {
     return makeRequest('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ email, password, name, role }),
     });
   },
 

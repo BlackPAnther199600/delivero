@@ -1,5 +1,5 @@
 import db from '../config/db.js';
-import { emitOrderUpdate } from '../services/socket.js';
+import { emitOrderUpdate, broadcastRiderLocation, broadcastOrderStatusChange } from '../services/socket.js';
 
 export const getOrders = async (req, res) => {
   try {
@@ -320,8 +320,8 @@ export const updateRiderLocation = async (req, res) => {
       return res.status(400).json({ message: 'Latitude e longitude sono obbligatori' });
     }
 
-    // Verify rider has this order and get customer id
-    const orderRes = await db.query('SELECT id, user_id, status FROM orders WHERE id = $1 AND rider_id = $2', [id, riderId]);
+    // Verify rider has this order and get customer id + delivery coords
+    const orderRes = await db.query('SELECT id, user_id, status, delivery_latitude, delivery_longitude FROM orders WHERE id = $1 AND rider_id = $2', [id, riderId]);
     if (orderRes.rows.length === 0) {
       return res.status(403).json({ message: 'Non autorizzato per questo ordine' });
     }
@@ -356,48 +356,37 @@ export const updateRiderLocation = async (req, res) => {
       console.warn('Could not insert track point:', e.message);
     }
 
-    // Emit websocket updates: to customer and to managers
-    try {
-      const { getIO } = await import('../services/socket.js');
-      const io = getIO();
-      // notify customer
-      io.to(`user_${order.user_id}`).emit('trackingUpdate', { orderId: id, latitude, longitude, eta_minutes: tracking.eta_minutes, timestamp: new Date() });
-      // notify managers
-      io.to('managers').emit('activeOrderUpdate', { orderId: id, latitude, longitude, eta_minutes: tracking.eta_minutes, status: tracking.status, timestamp: new Date() });
-      // proximity notification (ETA-based)
-      let shouldPush = false;
-      if (tracking.eta_minutes !== null && tracking.eta_minutes <= 5) {
-        io.to(`user_${order.user_id}`).emit('riderNearby', { orderId: id, eta_minutes: tracking.eta_minutes });
+    // Emit websocket updates: to customer and to managers via order channel
+    broadcastRiderLocation(id, latitude, longitude, tracking.eta_minutes || null);
+
+    // Check proximity for push notifications
+    let shouldPush = false;
+    if (tracking.eta_minutes !== null && tracking.eta_minutes <= 5) {
+      shouldPush = true;
+    }
+
+    // also if we have delivery coords, compute distance and push if within threshold
+    if (!shouldPush && order.delivery_latitude && order.delivery_longitude) {
+      const toRad = (v) => (v * Math.PI) / 180;
+      const R = 6371000; // meters
+      const dLat = toRad(order.delivery_latitude - latitude);
+      const dLon = toRad(order.delivery_longitude - longitude);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(latitude)) * Math.cos(toRad(order.delivery_latitude)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const dist = R * c;
+      if (dist <= 500) {
         shouldPush = true;
       }
+    }
 
-      // also if we have delivery coords, compute distance and push if within threshold
-      if (!shouldPush && order.delivery_latitude && order.delivery_longitude) {
-        const toRad = (v) => (v * Math.PI) / 180;
-        const R = 6371000; // meters
-        const dLat = toRad(order.delivery_latitude - latitude);
-        const dLon = toRad(order.delivery_longitude - longitude);
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(latitude)) * Math.cos(toRad(order.delivery_latitude)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const dist = R * c;
-        if (dist <= 500) {
-          // emit websocket
-          io.to(`user_${order.user_id}`).emit('riderNearby', { orderId: id, distance: Math.round(dist) });
-          shouldPush = true;
-        }
+    // server-side push via FCM if configured
+    if (shouldPush) {
+      try {
+        const push = await import('../services/push.js');
+        await push.sendPushToUser(order.user_id, { title: 'Il tuo rider è vicino!', body: `Preparati per la consegna!` });
+      } catch (e) {
+        console.warn('Push send failed:', e.message);
       }
-
-      // server-side push via FCM if configured
-      if (shouldPush) {
-        try {
-          const push = await import('../services/push.js');
-          await push.sendPushToUser(order.user_id, { title: 'Il tuo rider è vicino', body: `Il rider è a circa ${tracking.eta_minutes ?? ''} minuti.` });
-        } catch (e) {
-          console.warn('Push send failed:', e.message);
-        }
-      }
-    } catch (e) {
-      console.warn('WebSocket emit failed:', e.message);
     }
 
     res.status(200).json({
