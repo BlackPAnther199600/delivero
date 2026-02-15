@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { userAPI } from './services/api';
+import { CartProvider } from './context/CartContext';
 
 let Device = null;
 if (Platform.OS !== 'web') {
@@ -20,6 +21,7 @@ import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen from './screens/auth/RegisterScreen';
 import CustomerHomeScreen from './screens/customer/CustomerHomeScreen';
 import RestaurantsScreen from './screens/customer/RestaurantsScreen';
+import RestaurantDetailScreen from './screens/customer/RestaurantDetailScreen';
 import GroceriesScreen from './screens/customer/GroceriesScreen';
 import ShoppingScreen from './screens/customer/ShoppingScreen';
 import BrandProductsScreen from './screens/customer/BrandProductsScreen';
@@ -134,6 +136,20 @@ function CustomerStack({ onLogout }) {
         name="BrandProducts"
         component={BrandProductsScreen}
         options={{ title: 'Prodotti' }}
+      />
+      <Stack.Screen
+        name="RestaurantDetail"
+        component={RestaurantDetailScreen}
+        options={{
+          title: '🍽️ Menu',
+          headerStyle: {
+            backgroundColor: '#FF6B00',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
       />
       <Stack.Screen
         name="OrderTracking"
@@ -364,55 +380,57 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      {state.userToken == null ? (
-        <AuthStack />
-      ) : state.user?.role === 'customer' ? (
-        <>
-          {console.log('🎯 Navigando a CustomerStack per role:', state.user?.role)}
-          <CustomerStack onLogout={async () => {
-            // Clear storage and update state
-            try {
-              await AsyncStorage.removeItem('token');
-              await AsyncStorage.removeItem('user');
-            } catch (e) {
-              console.warn('Errore durante logout:', e);
-            }
-            dispatch({ type: 'SIGN_OUT' });
-          }} />
-        </>
-      ) : state.user?.role === 'rider' ? (
-        <>
-          {console.log('🎯 Navigando a RiderStack per role:', state.user?.role)}
-          <RiderStack onLogout={async () => {
-            try {
-              await AsyncStorage.removeItem('token');
-              await AsyncStorage.removeItem('user');
-            } catch (e) {
-              console.warn('Errore durante logout:', e);
-            }
-            dispatch({ type: 'SIGN_OUT' });
-          }} />
-        </>
-      ) : state.user?.role === 'manager' || state.user?.role === 'admin' ? (
-        <>
-          {console.log('🎯 Navigando a ManagerStack per role:', state.user?.role)}
-          <ManagerStack token={state.userToken} user={state.user} onLogout={async () => {
-            try {
-              await AsyncStorage.removeItem('token');
-              await AsyncStorage.removeItem('user');
-            } catch (e) {
-              console.warn('Errore durante logout:', e);
-            }
-            dispatch({ type: 'SIGN_OUT' });
-          }} />
-        </>
-      ) : (
-        <>
-          {console.log('❌ Ruolo sconosciuto:', state.user?.role)}
+    <CartProvider>
+      <NavigationContainer>
+        {state.userToken == null ? (
           <AuthStack />
-        </>
-      )}
-    </NavigationContainer>
+        ) : state.user?.role === 'customer' ? (
+          <>
+            {console.log('🎯 Navigando a CustomerStack per role:', state.user?.role)}
+            <CustomerStack onLogout={async () => {
+              // Clear storage and update state
+              try {
+                await AsyncStorage.removeItem('token');
+                await AsyncStorage.removeItem('user');
+              } catch (e) {
+                console.warn('Errore durante logout:', e);
+              }
+              dispatch({ type: 'SIGN_OUT' });
+            }} />
+          </>
+        ) : state.user?.role === 'rider' ? (
+          <>
+            {console.log('🎯 Navigando a RiderStack per role:', state.user?.role)}
+            <RiderStack onLogout={async () => {
+              try {
+                await AsyncStorage.removeItem('token');
+                await AsyncStorage.removeItem('user');
+              } catch (e) {
+                console.warn('Errore durante logout:', e);
+              }
+              dispatch({ type: 'SIGN_OUT' });
+            }} />
+          </>
+        ) : state.user?.role === 'manager' || state.user?.role === 'admin' ? (
+          <>
+            {console.log('🎯 Navigando a ManagerStack per role:', state.user?.role)}
+            <ManagerStack token={state.userToken} user={state.user} onLogout={async () => {
+              try {
+                await AsyncStorage.removeItem('token');
+                await AsyncStorage.removeItem('user');
+              } catch (e) {
+                console.warn('Errore durante logout:', e);
+              }
+              dispatch({ type: 'SIGN_OUT' });
+            }} />
+          </>
+        ) : (
+          <>
+            {console.log('❌ Ruolo sconosciuto:', state.user?.role)}
+            <AuthStack />
+          </>
+        )}
+      </NavigationContainer>
+    </CartProvider>
   );
 }
