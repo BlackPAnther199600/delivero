@@ -376,13 +376,6 @@ export default function App() {
     };
 
     registerPush();
-
-    // Polling interval per controllare se il token è stato salvato (importante per web)
-    const pollInterval = setInterval(() => {
-      bootstrapAsync();
-    }, 1000);
-
-    return () => clearInterval(pollInterval);
   }, []);
 
   if (state.isLoading) {
@@ -399,50 +392,37 @@ export default function App() {
         {state.userToken == null ? (
           <AuthStack />
         ) : state.user?.role === 'customer' ? (
-          <>
-            {console.log('🎯 Navigando a CustomerStack per role:', state.user?.role)}
-            <CustomerStack onLogout={async () => {
-              // Clear storage and update state
-              try {
-                await AsyncStorage.removeItem('token');
-                await AsyncStorage.removeItem('user');
-              } catch (e) {
-                console.warn('Errore durante logout:', e);
-              }
-              dispatch({ type: 'SIGN_OUT' });
-            }} />
-          </>
+          <CustomerStack onLogout={async () => {
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+            } catch (e) {
+              console.warn('Errore durante logout:', e);
+            }
+            dispatch({ type: 'SIGN_OUT' });
+          }} />
         ) : state.user?.role === 'rider' ? (
-          <>
-            {console.log('🎯 Navigando a RiderStack per role:', state.user?.role)}
-            <RiderStack onLogout={async () => {
-              try {
-                await AsyncStorage.removeItem('token');
-                await AsyncStorage.removeItem('user');
-              } catch (e) {
-                console.warn('Errore durante logout:', e);
-              }
-              dispatch({ type: 'SIGN_OUT' });
-            }} />
-          </>
+          <RiderStack onLogout={async () => {
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+            } catch (e) {
+              console.warn('Errore durante logout:', e);
+            }
+            dispatch({ type: 'SIGN_OUT' });
+          }} />
         ) : state.user?.role === 'manager' || state.user?.role === 'admin' ? (
-          <>
-            {console.log('🎯 Navigando a ManagerStack per role:', state.user?.role)}
-            <ManagerStack token={state.userToken} user={state.user} onLogout={async () => {
-              try {
-                await AsyncStorage.removeItem('token');
-                await AsyncStorage.removeItem('user');
-              } catch (e) {
-                console.warn('Errore durante logout:', e);
-              }
-              dispatch({ type: 'SIGN_OUT' });
-            }} />
-          </>
+          <ManagerStack token={state.userToken} user={state.user} onLogout={async () => {
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+            } catch (e) {
+              console.warn('Errore durante logout:', e);
+            }
+            dispatch({ type: 'SIGN_OUT' });
+          }} />
         ) : (
-          <>
-            {console.log('❌ Ruolo sconosciuto:', state.user?.role)}
-            <AuthStack />
-          </>
+          <AuthStack />
         )}
       </NavigationContainer>
     </CartProvider>
