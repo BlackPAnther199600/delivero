@@ -42,3 +42,15 @@ Thumbs.db
 # Docker
 .dockerignore
 /.vs/delivero/FileContentIndex
+
+# Expo
+.expo/
+android/
+ios/
+*.jks
+*.p8
+*.json-bak
+
+# EAS
+eas-build-pre-install.sh
+eas-build-post-install.sh
