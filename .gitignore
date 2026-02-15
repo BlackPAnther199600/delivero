@@ -48,6 +48,20 @@ Thumbs.db
 android/
 ios/
 *.jks
+
+# 🚨 CRITICAL: Firebase & Google Cloud Credentials (NEVER COMMIT)
+*firebase*.json
+*firebase-key*
+*firebase-adminsdk*
+*.p12
+*.pem
+google-services.json
+GoogleService-Info.plist
+serviceAccountKey.json
+*service-account*.json
+*service*account*.json
+credentials.json
+secret.json
 *.p8
 *.json-bak
 
