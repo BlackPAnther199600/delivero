@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import axios from 'axios';
+import { makeRequest } from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { io } from 'socket.io-client';
