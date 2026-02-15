@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,32 +7,78 @@ import {
   StyleSheet,
   FlatList,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { makeRequest } from '../../services/api';
 
-export default function RestaurantsScreen({ navigation }) {
+export default function RestaurantsScreen({ navigation, route }) {
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-
-  const categories = ['All', 'Pizza', 'Burger', 'Sushi', 'Poke', 'Kebab', 'Dessert', 'Cinese', 'Healthy', 'Italiano'];
-
-  const restaurants = [
-    { id: 1, name: 'Pizzeria Roma', category: 'Pizza', rating: 4.8, distance: '0.5km', time: '20-30min', reviews: 234 },
-    { id: 2, name: 'Burger House', category: 'Burger', rating: 4.6, distance: '0.8km', time: '15-25min', reviews: 189 },
-    { id: 3, name: 'Sushi Master', category: 'Sushi', rating: 4.9, distance: '1.2km', time: '30-40min', reviews: 312 },
-    { id: 4, name: 'Poke Bowl', category: 'Poke', rating: 4.7, distance: '0.6km', time: '15-20min', reviews: 156 },
-    { id: 5, name: 'Kebab Palace', category: 'Kebab', rating: 4.5, distance: '0.9km', time: '10-15min', reviews: 201 },
-    { id: 6, name: 'Pasticceria Dolce', category: 'Dessert', rating: 4.9, distance: '0.4km', time: '5-10min', reviews: 298 },
-    { id: 7, name: 'Dragon Cinese', category: 'Cinese', rating: 4.4, distance: '1.1km', time: '25-35min', reviews: 167 },
-    { id: 8, name: 'Healthy Bowl', category: 'Healthy', rating: 4.8, distance: '0.7km', time: '12-18min', reviews: 245 },
-    { id: 9, name: 'La Trattoria', category: 'Italiano', rating: 4.7, distance: '1.3km', time: '30-45min', reviews: 289 },
-  ];
-
-  const filteredRestaurants = restaurants.filter(r => {
-    const matchCategory = selectedCategory === 'All' || r.category === selectedCategory;
-    const matchSearch = r.name.toLowerCase().includes(searchText.toLowerCase()) || 
-                       r.category.toLowerCase().includes(searchText.toLowerCase());
-    return matchCategory && matchSearch;
+  const [restaurants, setRestaurants] = useState([]);
+  const [categories, setCategories] = useState(['All']);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    rating_min: 0,
+    max_delivery_time: 60,
+    max_delivery_cost: 100,
   });
+
+  // Load initial data
+  useEffect(() => {
+    loadCategories();
+    loadRestaurants();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await makeRequest('/restaurants/categories', { method: 'GET' });
+      setCategories(['All', ...(data || [])]);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadRestaurants = async (searchQuery = '', category = 'All') => {
+    try {
+      setLoading(true);
+      // Build query params
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      if (category !== 'All') {
+        params.append('category', category);
+      }
+      if (filters.rating_min > 0) {
+        params.append('rating_min', filters.rating_min);
+      }
+      params.append('max_delivery_time', filters.max_delivery_time);
+      params.append('max_delivery_cost', filters.max_delivery_cost);
+
+      const queryString = params.toString();
+      const url = `/restaurants${queryString ? '?' + queryString : ''}`;
+      const data = await makeRequest(url, { method: 'GET' });
+      setRestaurants(data || []);
+    } catch (error) {
+      console.error('Error loading restaurants:', error);
+      Alert.alert('Errore', 'Non è stato possibile caricare i ristoranti');
+      setRestaurants([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle search with debounce
+  const handleSearch = (text) => {
+    setSearchText(text);
+    loadRestaurants(text, selectedCategory);
+  };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    loadRestaurants(searchText, category);
+  };
 
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
@@ -40,7 +86,7 @@ export default function RestaurantsScreen({ navigation }) {
         styles.categoryPill,
         selectedCategory === item && styles.categoryPillActive
       ]}
-      onPress={() => setSelectedCategory(item)}
+      onPress={() => handleCategoryChange(item)}
     >
       <Text style={[
         styles.categoryPillText,
@@ -59,28 +105,34 @@ export default function RestaurantsScreen({ navigation }) {
       <View style={styles.restaurantHeader}>
         <View style={{ flex: 1 }}>
           <Text style={styles.restaurantName}>{item.name}</Text>
-          <Text style={styles.restaurantCategory}>{item.category}</Text>
+          <Text style={styles.restaurantCategory}>{item.category || 'Ristorante'}</Text>
         </View>
-        <Text style={styles.rating}>⭐ {item.rating}</Text>
+        <Text style={styles.rating}>⭐ {(item.rating || 0).toFixed(1)}</Text>
       </View>
-      
+
       <View style={styles.restaurantFooter}>
-        <Text style={styles.reviewCount}>📝 {item.reviews} reviews</Text>
-        <Text style={styles.distance}>📍 {item.distance}</Text>
-        <Text style={styles.time}>⏱️ {item.time}</Text>
+        <Text style={styles.time}>⏱️ {item.delivery_time || 0}-{(item.delivery_time || 0) + 10}min</Text>
+        <Text style={styles.distance}>💰 €{item.delivery_cost || 0}</Text>
+        <Text style={styles.reviewCount}>👥 {item.review_count || 0} reviews</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🍽️ Ristoranti</Text>
+        <Text style={styles.headerSubtitle}>Scopri nuove destinazioni</Text>
+      </View>
+
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
           placeholder="🔍 Cerca ristoranti..."
           value={searchText}
-          onChangeText={setSearchText}
+          onChangeText={handleSearch}
           placeholderTextColor="#999"
         />
       </View>
@@ -97,21 +149,28 @@ export default function RestaurantsScreen({ navigation }) {
         contentContainerStyle={styles.categoriesContent}
       />
 
-      {/* Restaurants List */}
-      <FlatList
-        data={filteredRestaurants}
-        renderItem={renderRestaurantItem}
-        keyExtractor={(item) => item.id.toString()}
-        scrollEnabled={true}
-        style={styles.restaurantsList}
-        contentContainerStyle={styles.restaurantsContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>😅 Nessun ristorante trovato</Text>
-            <Text style={styles.emptySubtext}>Prova a cambiare i filtri</Text>
-          </View>
-        }
-      />
+      {/* Restaurants List or Loading */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B00" />
+          <Text style={styles.loadingText}>Caricamento ristoranti...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={restaurants}
+          renderItem={renderRestaurantItem}
+          keyExtractor={(item) => item.id.toString()}
+          scrollEnabled={true}
+          style={styles.restaurantsList}
+          contentContainerStyle={styles.restaurantsContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>😅 Nessun ristorante trovato</Text>
+              <Text style={styles.emptySubtext}>Prova a cambiare i filtri o la ricerca</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -121,9 +180,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f8f8',
   },
+  header: {
+    padding: 16,
+    paddingTop: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
+  },
   searchContainer: {
     padding: 15,
-    paddingBottom: 10,
+    paddingVertical: 10,
     backgroundColor: '#FF6B00',
   },
   searchInput: {
@@ -163,6 +239,16 @@ const styles = StyleSheet.create({
   },
   categoryPillTextActive: {
     color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
   },
   restaurantsList: {
     flex: 1,
