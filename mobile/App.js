@@ -22,7 +22,9 @@ import RegisterScreen from './screens/auth/RegisterScreen';
 import CustomerHomeScreen from './screens/customer/CustomerHomeScreen';
 import RestaurantsScreen from './screens/customer/RestaurantsScreen';
 import RestaurantDetailScreen from './screens/customer/RestaurantDetailScreen';
+import CartScreen from './screens/customer/CartScreen';
 import GroceriesScreen from './screens/customer/GroceriesScreen';
+import { useCart } from './context/CartContext';
 import ShoppingScreen from './screens/customer/ShoppingScreen';
 import BrandProductsScreen from './screens/customer/BrandProductsScreen';
 import CustomerOrdersScreen from './screens/customer/CustomerOrdersScreen';
@@ -54,6 +56,8 @@ function AuthStack() {
 
 // Customer Stack
 function CustomerTabs({ onLogout }) {
+  const cart = useCart();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -108,6 +112,16 @@ function CustomerTabs({ onLogout }) {
           title: '🛍️ Shopping',
           tabBarLabel: '🛍️ Shopping',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>🛍️</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          title: '🛒 Carrello',
+          tabBarLabel: '🛒 Carrello',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>🛒</Text>,
+          tabBarBadge: cart?.itemCount > 0 ? cart.itemCount : null,
         }}
       />
       <Tab.Screen
