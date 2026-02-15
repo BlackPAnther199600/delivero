@@ -3,18 +3,6 @@
   "version": "1.0.0",
   "description": "Mobile app per Delivero - iOS & Android",
   "main": "node_modules/expo/AppEntry.js",
-  "browser": {
-    "crypto": false,
-    "stream": false,
-    "http": false,
-    "https": false,
-    "zlib": false,
-    "url": false,
-    "fs": false,
-    "path": false,
-    "process": false,
-    "http2": false
-  },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
