@@ -25,11 +25,12 @@ import ShoppingScreen from './screens/customer/ShoppingScreen';
 import BrandProductsScreen from './screens/customer/BrandProductsScreen';
 import CustomerOrdersScreen from './screens/customer/CustomerOrdersScreen';
 import CustomerOrderTrackingScreen from './screens/customer/CustomerOrderTrackingScreen';
+import OrderTrackingLiveScreen from './screens/customer/OrderTrackingLiveScreen';
 import RiderHomeScreen from './screens/rider/RiderHomeScreen';
 import RiderActiveScreen from './screens/rider/RiderActiveScreen';
 import AdminDashboardScreen from './screens/admin/AdminDashboardScreen';
 import AdminTicketsScreen from './screens/admin/AdminTicketsScreen';
-import { ActivityIndicator, View, Text } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity } from 'react-native';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,7 +51,7 @@ function AuthStack() {
 }
 
 // Customer Stack
-function CustomerTabs() {
+function CustomerTabs({ onLogout }) {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -73,6 +74,11 @@ function CustomerTabs() {
           title: '🍔 Home',
           tabBarLabel: '🍔 Home',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>🏠</Text>,
+          headerRight: () => (
+            <TouchableOpacity onPress={onLogout} style={{ marginRight: 12 }}>
+              <Text style={{ fontSize: 20 }}>🚪</Text>
+            </TouchableOpacity>
+          ),
         }}
       />
       <Tab.Screen
@@ -115,12 +121,13 @@ function CustomerTabs() {
   );
 }
 
-function CustomerStack() {
+function CustomerStack({ onLogout }) {
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="CustomerTabs"
-        component={CustomerTabs}
+        // pass onLogout down to tabs so header button can call it
+        children={() => <CustomerTabs onLogout={onLogout} />}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -142,12 +149,26 @@ function CustomerStack() {
           },
         }}
       />
+      <Stack.Screen
+        name="OrderTrackingLive"
+        component={OrderTrackingLiveScreen}
+        options={{
+          title: '🗺️ Tracking Live',
+          headerStyle: {
+            backgroundColor: '#FF6B00',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
     </Stack.Navigator>
   );
 }
 
 // Rider Stack
-function RiderStack() {
+function RiderStack({ onLogout }) {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -170,6 +191,11 @@ function RiderStack() {
           title: '📦 Ordini Disponibili',
           tabBarLabel: '📦 Disponibili',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>📦</Text>,
+          headerRight: () => (
+            <TouchableOpacity onPress={onLogout} style={{ marginRight: 12 }}>
+              <Text style={{ fontSize: 20 }}>🚪</Text>
+            </TouchableOpacity>
+          ),
         }}
       />
       <Tab.Screen
@@ -186,7 +212,7 @@ function RiderStack() {
 }
 
 // Manager Stack - Admin Dashboard
-function ManagerStack({ token, user }) {
+function ManagerStack({ token, user, onLogout }) {
   return (
     <Stack.Navigator
       screenOptions={{
@@ -205,6 +231,11 @@ function ManagerStack({ token, user }) {
         component={AdminDashboardScreen}
         options={{
           title: '⚙️ Admin Dashboard',
+          headerRight: () => (
+            <TouchableOpacity onPress={onLogout} style={{ marginRight: 12 }}>
+              <Text style={{ fontSize: 20 }}>🚪</Text>
+            </TouchableOpacity>
+          ),
         }}
         initialParams={{ token, user }}
       />
@@ -339,17 +370,42 @@ export default function App() {
       ) : state.user?.role === 'customer' ? (
         <>
           {console.log('🎯 Navigando a CustomerStack per role:', state.user?.role)}
-          <CustomerStack />
+          <CustomerStack onLogout={async () => {
+            // Clear storage and update state
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+            } catch (e) {
+              console.warn('Errore durante logout:', e);
+            }
+            dispatch({ type: 'SIGN_OUT' });
+          }} />
         </>
       ) : state.user?.role === 'rider' ? (
         <>
           {console.log('🎯 Navigando a RiderStack per role:', state.user?.role)}
-          <RiderStack />
+          <RiderStack onLogout={async () => {
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+            } catch (e) {
+              console.warn('Errore durante logout:', e);
+            }
+            dispatch({ type: 'SIGN_OUT' });
+          }} />
         </>
       ) : state.user?.role === 'manager' || state.user?.role === 'admin' ? (
         <>
           {console.log('🎯 Navigando a ManagerStack per role:', state.user?.role)}
-          <ManagerStack token={state.userToken} user={state.user} />
+          <ManagerStack token={state.userToken} user={state.user} onLogout={async () => {
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+            } catch (e) {
+              console.warn('Errore durante logout:', e);
+            }
+            dispatch({ type: 'SIGN_OUT' });
+          }} />
         </>
       ) : (
         <>

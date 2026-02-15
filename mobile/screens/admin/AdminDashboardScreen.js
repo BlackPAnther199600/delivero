@@ -7,12 +7,16 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Alert
+  Alert,
+  Modal,
+  TextInput,
+  Picker
 } from 'react-native';
 import { makeRequest } from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { io } from 'socket.io-client';
+import ManagerRealTimeMapScreen from './ManagerRealTimeMapScreen';
 
 let MapView = null;
 let MapMarker = null;
@@ -38,6 +42,13 @@ const AdminDashboardScreen = ({ navigation, route }) => {
   const [tickets, setTickets] = useState([]);
   const [userRole, setUserRole] = useState('');
   const [token, setToken] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Modal for add/edit user
+  const [userModalVisible, setUserModalVisible] = useState(false);
+  const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit'
+  const [modalUser, setModalUser] = useState({ id: null, name: '', email: '', role: 'customer', password: '' });
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     const initToken = async () => {
@@ -46,6 +57,17 @@ const AdminDashboardScreen = ({ navigation, route }) => {
         tokenValue = await AsyncStorage.getItem('token');
       }
       setToken(tokenValue);
+      // get current user info if available
+      let u = route.params?.user;
+      if (!u) {
+        try {
+          const stored = await AsyncStorage.getItem('user');
+          if (stored) u = JSON.parse(stored);
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (u) setCurrentUser(u);
       if (tokenValue) {
         loadAllData(tokenValue);
       }
@@ -155,6 +177,12 @@ const AdminDashboardScreen = ({ navigation, route }) => {
   };
 
   const handleDeleteUser = async (userId) => {
+    // Prevent deleting currently logged-in manager
+    if (currentUser && currentUser.id === userId) {
+      Alert.alert('Impossibile', "Non puoi eliminare il tuo account mentre sei autenticato");
+      return;
+    }
+
     Alert.alert('Confirm', 'Are you sure?', [
       { text: 'Cancel' },
       {
@@ -172,6 +200,60 @@ const AdminDashboardScreen = ({ navigation, route }) => {
     ]);
   };
 
+  const openAddUserModal = () => {
+    setModalMode('add');
+    setModalUser({ id: null, name: '', email: '', role: 'customer', password: '' });
+    setUserModalVisible(true);
+  };
+
+  const openEditUserModal = (user) => {
+    setModalMode('edit');
+    setModalUser({ id: user.id, name: user.name || '', email: user.email || '', role: user.role || 'customer', password: '' });
+    setUserModalVisible(true);
+  };
+
+  const submitModalUser = async () => {
+    // create or update
+    setModalLoading(true);
+    try {
+      if (modalMode === 'add') {
+        // require password for new user
+        if (!modalUser.password) {
+          Alert.alert('Errore', 'Inserisci una password per il nuovo utente');
+          setModalLoading(false);
+          return;
+        }
+        await makeRequest('/admin/users', {
+          method: 'POST',
+          body: JSON.stringify({ name: modalUser.name, email: modalUser.email, role: modalUser.role, password: modalUser.password })
+        });
+        Alert.alert('Successo', 'Utente creato');
+      } else {
+        // edit
+        const body = { name: modalUser.name, email: modalUser.email, role: modalUser.role };
+        // include password only if set
+        if (modalUser.password) body.password = modalUser.password;
+        await makeRequest(`/admin/users/${modalUser.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(body)
+        });
+        Alert.alert('Successo', 'Utente aggiornato');
+        // if current user updated their own profile, refresh stored user
+        if (currentUser && modalUser.id === currentUser.id) {
+          const updated = { ...currentUser, name: modalUser.name, email: modalUser.email, role: modalUser.role };
+          setCurrentUser(updated);
+          await AsyncStorage.setItem('user', JSON.stringify(updated));
+        }
+      }
+      setUserModalVisible(false);
+      loadUsers();
+    } catch (e) {
+      Alert.alert('Errore', e?.message || 'Operazione fallita');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   if (loading && !stats) {
     return (
       <View style={styles.centerContainer}>
@@ -180,8 +262,16 @@ const AdminDashboardScreen = ({ navigation, route }) => {
     );
   }
 
-  const StatCard = ({ title, value, subtitle }) => (
-    <View style={styles.statCard}>
+  const StatCard = ({ title, value, subtitle, trend, trendColor, icon }) => (
+    <View style={[styles.statCard, { borderLeftColor: trendColor || '#FF6B00', borderLeftWidth: 4 }]}>
+      <View style={styles.statCardHeader}>
+        <Text style={styles.statIcon}>{icon}</Text>
+        {trend && (
+          <Text style={[styles.statTrend, { color: trendColor }]}>
+            {trend}
+          </Text>
+        )}
+      </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{title}</Text>
       {subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
@@ -206,9 +296,20 @@ const AdminDashboardScreen = ({ navigation, route }) => {
         <Text style={styles.userEmail}>{item.email}</Text>
         <Text style={styles.userRole}>{item.role}</Text>
       </View>
-      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(item.id)}>
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#1976d2' }]} onPress={() => openEditUserModal(item)}>
+          <Text style={styles.actionButtonText}>Edit</Text>
+        </TouchableOpacity>
+        {currentUser && currentUser.id === item.id ? (
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#9e9e9e' }]} disabled>
+            <Text style={styles.actionButtonText}>Delete</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteUser(item.id)}>
+            <Text style={styles.deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 
@@ -227,10 +328,18 @@ const AdminDashboardScreen = ({ navigation, route }) => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
+      {/* Header with Notifications */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>⚙️ Admin Panel</Text>
-        <Text style={styles.headerSubtitle}>System Management</Text>
+        <View>
+          <Text style={styles.headerTitle}>⚙️ Admin Panel</Text>
+          <Text style={styles.headerSubtitle}>Welcome back, {currentUser?.name || 'Manager'}</Text>
+        </View>
+        <TouchableOpacity style={styles.notificationBell}>
+          <Text style={styles.bellIcon}>🔔</Text>
+          <View style={styles.notificationBadge}>
+            <Text style={styles.badgeText}>3</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Tabs */}
@@ -247,14 +356,32 @@ const AdminDashboardScreen = ({ navigation, route }) => {
       {activeTab === 'stats' && stats && (
         <View style={styles.content}>
           <View style={styles.statsGrid}>
-            <StatCard title="Users" value={stats.totalUsers} />
-            <StatCard title="Orders" value={stats.totalOrders} />
+            <StatCard
+              icon="👥"
+              title="Users"
+              value={stats.totalUsers}
+              trend="+12% vs ieri"
+              trendColor="#4caf50"
+            />
+            <StatCard
+              icon="📦"
+              title="Orders"
+              value={stats.totalOrders}
+              trend="+8% vs ieri"
+              trendColor="#4caf50"
+            />
           </View>
           <View style={styles.statsGrid}>
-            <StatCard title="Total Revenue" value={`€${stats.totalRevenue?.toFixed(2)}`} />
+            <StatCard
+              icon="💰"
+              title="Revenue"
+              value={`€${stats.totalRevenue?.toFixed(2)}`}
+              trend="+5% vs ieri"
+              trendColor="#4caf50"
+            />
           </View>
 
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
+          <Text style={styles.sectionTitle}>📊 Recent Orders</Text>
           {stats.recentOrders?.map(order => (
             <View key={order.id} style={styles.orderItem}>
               <View>
@@ -271,16 +398,32 @@ const AdminDashboardScreen = ({ navigation, route }) => {
       {activeTab === 'finance' && finance && (
         <View style={styles.content}>
           <View style={styles.statsGrid}>
-            <StatCard title="Revenue" value={`€${finance.totalRevenue?.toFixed(2)}`} />
-            <StatCard title="Bill Payments" value={finance.billPayments?.total} />
+            <StatCard
+              icon="💳"
+              title="Revenue"
+              value={`€${finance.totalRevenue?.toFixed(2)}`}
+              trend="+12% vs mese"
+              trendColor="#4caf50"
+            />
+            <StatCard
+              icon="✅"
+              title="Payments"
+              value={finance.billPayments?.total}
+              trend="-2% errors"
+              trendColor="#ff9800"
+            />
           </View>
           <View style={styles.statsGrid}>
-            <StatCard title="Bills Total" value={`€${finance.billPayments?.amount?.toFixed(2)}`} />
+            <StatCard
+              icon="📋"
+              title="Bills"
+              value={`€${finance.billPayments?.amount?.toFixed(2)}`}
+            />
           </View>
 
-          <Text style={styles.sectionTitle}>Payment Methods</Text>
+          <Text style={styles.sectionTitle}>💳 Payment Methods</Text>
           {finance.paymentMethods?.map((pm, idx) => (
-            <View key={idx} style={styles.paymentItem}>
+            <View key={idx} style={[styles.paymentItem, idx % 2 === 0 ? styles.zebra : {}]}>
               <Text style={styles.paymentMethod}>{pm.payment_method}</Text>
               <Text style={styles.paymentAmount}>€{pm.total?.toFixed(2)} ({pm.count})</Text>
             </View>
@@ -292,12 +435,34 @@ const AdminDashboardScreen = ({ navigation, route }) => {
       {activeTab === 'metrics' && metrics && (
         <View style={styles.content}>
           <View style={styles.statsGrid}>
-            <StatCard title="Pharmacy" value={metrics.pharmacy?.total_orders} subtitle="Orders" />
-            <StatCard title="Transports" value={metrics.medicalTransports?.total_transports} subtitle="Medical" />
+            <StatCard
+              icon="🏥"
+              title="Pharmacy"
+              value={metrics.pharmacy?.total_orders}
+              subtitle="Orders"
+              trend="+3 today"
+              trendColor="#2196f3"
+            />
+            <StatCard
+              icon="🚑"
+              title="Transports"
+              value={metrics.medicalTransports?.total_transports}
+              subtitle="Medical"
+            />
           </View>
           <View style={styles.statsGrid}>
-            <StatCard title="Pickups" value={metrics.documentPickups?.total_pickups} subtitle="Documents" />
-            <StatCard title="Bills" value={metrics.bills?.total_bills} subtitle="Total" />
+            <StatCard
+              icon="📄"
+              title="Pickups"
+              value={metrics.documentPickups?.total_pickups}
+              subtitle="Documents"
+            />
+            <StatCard
+              icon="💵"
+              title="Bills"
+              value={metrics.bills?.total_bills}
+              subtitle="Total"
+            />
           </View>
         </View>
       )}
@@ -308,12 +473,19 @@ const AdminDashboardScreen = ({ navigation, route }) => {
           {loading ? (
             <ActivityIndicator size="large" color="#FF6B00" />
           ) : (
-            <FlatList
-              data={users}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({ item }) => <UserItem item={item} />}
-              scrollEnabled={false}
-            />
+            <>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 12 }}>
+                <TouchableOpacity style={[styles.primaryButton]} onPress={openAddUserModal}>
+                  <Text style={styles.primaryButtonText}>+ Add User</Text>
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={users}
+                keyExtractor={item => item.id.toString()}
+                renderItem={({ item }) => <UserItem item={item} />}
+                scrollEnabled={false}
+              />
+            </>
           )}
         </View>
       )}
@@ -336,61 +508,37 @@ const AdminDashboardScreen = ({ navigation, route }) => {
 
       {/* Tracking Tab */}
       {activeTab === 'tracking' && (
-        <View style={styles.content}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#FF6B00" />
-          ) : (
-            MapView && activeOrders.length > 0 ? (
-              <View style={{ height: 400 }}>
-                <MapView
-                  style={{ flex: 1 }}
-                  initialRegion={{
-                    latitude: parseFloat(activeOrders[0].rider_latitude || 45.4642),
-                    longitude: parseFloat(activeOrders[0].rider_longitude || 9.19),
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                  }}
-                >
-                  {activeOrders.map(o => o.rider_latitude ? (
-                    <MapMarker
-                      key={o.id}
-                      coordinate={{ latitude: parseFloat(o.rider_latitude), longitude: parseFloat(o.rider_longitude) }}
-                      title={`Ordine #${o.id}`}
-                      description={`${o.status} • €${o.total_amount}`}
-                      onPress={() => setSelectedOrderMarker(o)}
-                    />
-                  ) : null)}
-                </MapView>
-              </View>
-            ) : (
-              <FlatList
-                data={activeOrders}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => (
-                  <View style={styles.orderItem}>
-                    <View>
-                      <Text style={styles.orderCustomer}>Ordine #{item.id} • {item.status}</Text>
-                      <Text style={styles.orderStatus}>{item.rider_name || `Rider #${item.rider_id || '--'}`}</Text>
-                      <Text style={styles.orderStatus}>Pos: {item.rider_latitude ? `${parseFloat(item.rider_latitude).toFixed(4)}, ${parseFloat(item.rider_longitude).toFixed(4)}` : 'n/d'}</Text>
-                    </View>
-                    <Text style={styles.orderAmount}>€{item.total_amount}</Text>
-                  </View>
-                )}
-                scrollEnabled={false}
-              />
-            )
-          )}
-          {selectedOrderMarker && (
-            <View style={{ padding: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee' }}>
-              <Text style={{ fontWeight: '700' }}>Ordine #{selectedOrderMarker.id} • €{selectedOrderMarker.total_amount}</Text>
-              <Text>{selectedOrderMarker.status} • Rider: {selectedOrderMarker.rider_name || '—'}</Text>
-              <TouchableOpacity style={{ marginTop: 8 }} onPress={() => setSelectedOrderMarker(null)}>
-                <Text style={{ color: '#FF6B00' }}>Chiudi</Text>
+        <ManagerRealTimeMapScreen route={{ params: { token, user: currentUser } }} />
+      )}
+      {/* Add/Edit User Modal */}
+      <Modal visible={userModalVisible} transparent animationType="slide" onRequestClose={() => setUserModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalCard}>
+            <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 8 }}>{modalMode === 'add' ? 'Add User' : 'Edit User'}</Text>
+            <TextInput placeholder="Name" style={styles.modalInput} value={modalUser.name} onChangeText={(t) => setModalUser({ ...modalUser, name: t })} />
+            <TextInput placeholder="Email" style={styles.modalInput} value={modalUser.email} onChangeText={(t) => setModalUser({ ...modalUser, email: t })} keyboardType="email-address" autoCapitalize="none" />
+            <View style={{ marginBottom: 10 }}>
+              <Text style={{ marginBottom: 6 }}>Role</Text>
+              <Picker selectedValue={modalUser.role} onValueChange={(v) => setModalUser({ ...modalUser, role: v })}>
+                <Picker.Item label="Customer" value="customer" />
+                <Picker.Item label="Rider" value="rider" />
+                <Picker.Item label="Manager" value="manager" />
+              </Picker>
+            </View>
+            {modalMode === 'add' && (
+              <TextInput placeholder="Password" style={styles.modalInput} value={modalUser.password} onChangeText={(t) => setModalUser({ ...modalUser, password: t })} secureTextEntry />
+            )}
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+              <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#9e9e9e' }]} onPress={() => setUserModalVisible(false)}>
+                <Text style={styles.actionButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#FF6B00' }]} onPress={submitModalUser} disabled={modalLoading}>
+                {modalLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.actionButtonText}>{modalMode === 'add' ? 'Create' : 'Save'}</Text>}
               </TouchableOpacity>
             </View>
-          )}
+          </View>
         </View>
-      )}
+      </Modal>
     </ScrollView>
   );
 };
@@ -409,7 +557,33 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee'
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start'
+  },
+  notificationBell: {
+    position: 'relative',
+    padding: 8,
+  },
+  bellIcon: {
+    fontSize: 24,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF1744',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold'
   },
   headerTitle: {
     fontSize: 24,
@@ -457,12 +631,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2
+  },
+  statCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 8
+  },
+  statIcon: {
+    fontSize: 24,
+    marginBottom: 8
   },
   statValue: {
     fontSize: 20,
@@ -474,133 +659,191 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 5
   },
+  statTrend: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 8
+  },
+  marginTop: 5
+},
   statSubtitle: {
-    fontSize: 11,
-    color: '#bbb',
-    marginTop: 3
-  },
+  fontSize: 11,
+  color: '#bbb',
+  marginTop: 3
+},
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginVertical: 12
-  },
+  fontSize: 14,
+  fontWeight: 'bold',
+  color: '#333',
+  marginVertical: 12
+},
   orderItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 6,
+  marginBottom: 8,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  borderLeftWidth: 4,
+  borderLeftColor: '#FF6B00'
+},
   orderCustomer: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333'
-  },
+  fontSize: 13,
+  fontWeight: '600',
+  color: '#333'
+},
   orderStatus: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 3
-  },
+  fontSize: 11,
+  color: '#999',
+  marginTop: 3
+},
   orderAmount: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#FF6B00'
-  },
+  fontSize: 13,
+  fontWeight: 'bold',
+  color: '#FF6B00'
+},
   userItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 6,
+  marginBottom: 8,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  borderLeftWidth: 3,
+  borderLeftColor: '#2196f3'
+},
   userInfo: {
-    flex: 1
-  },
+  flex: 1
+},
   userName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333'
-  },
+  fontSize: 13,
+  fontWeight: '600',
+  color: '#333'
+},
   userEmail: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 2
-  },
+  fontSize: 11,
+  color: '#999',
+  marginTop: 2
+},
   userRole: {
-    fontSize: 11,
-    color: '#FF6B00',
-    marginTop: 2,
-    fontWeight: '500'
-  },
+  fontSize: 11,
+  color: '#FF6B00',
+  marginTop: 2,
+  fontWeight: '500'
+},
   deleteButton: {
-    backgroundColor: '#d32f2f',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 4
-  },
+  backgroundColor: '#d32f2f',
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  borderRadius: 4
+},
   deleteButtonText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600'
-  },
+  color: '#fff',
+  fontSize: 11,
+  fontWeight: '600'
+},
   ticketItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 6,
+  marginBottom: 8,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  borderLeftWidth: 3,
+  borderLeftColor: '#9c27b0'
+},
   ticketTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333'
-  },
+  fontSize: 13,
+  fontWeight: '600',
+  color: '#333'
+},
   ticketType: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 2
-  },
+  fontSize: 11,
+  color: '#999',
+  marginTop: 2
+},
   ticketDate: {
-    fontSize: 10,
-    color: '#bbb',
-    marginTop: 2
-  },
+  fontSize: 10,
+  color: '#bbb',
+  marginTop: 2
+},
   ticketStatus: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    marginLeft: 10
-  },
+  paddingVertical: 4,
+  paddingHorizontal: 8,
+  borderRadius: 4,
+  marginLeft: 10
+},
   ticketStatusText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600'
-  },
+  color: '#fff',
+  fontSize: 10,
+  fontWeight: '600'
+},
+  actionButton: {
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  borderRadius: 4,
+  justifyContent: 'center',
+  alignItems: 'center'
+},
+  actionButtonText: {
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: '600'
+},
+  primaryButton: {
+  backgroundColor: '#FF6B00',
+  paddingVertical: 10,
+  paddingHorizontal: 14,
+  borderRadius: 8
+},
+  primaryButtonText: {
+  color: '#fff',
+  fontWeight: '700'
+},
+  modalContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20,
+  backgroundColor: 'rgba(0,0,0,0.4)'
+},
+  modalCard: {
+  width: '100%',
+  backgroundColor: '#fff',
+  borderRadius: 8,
+  padding: 16
+},
+  modalInput: {
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+  borderRadius: 8,
+  padding: 10,
+  marginBottom: 10
+},
   paymentItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between'
-  },
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 6,
+  marginBottom: 8,
+  flexDirection: 'row',
+  justifyContent: 'space-between'
+},
+  zebra: {
+  backgroundColor: '#f8f8f8'
+},
   paymentMethod: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333'
-  },
+  fontSize: 13,
+  fontWeight: '600',
+  color: '#333'
+},
   paymentAmount: {
-    fontSize: 13,
-    color: '#FF6B00',
-    fontWeight: 'bold'
-  }
+  fontSize: 13,
+  color: '#FF6B00',
+  fontWeight: 'bold'
+}
 });
 
 export default AdminDashboardScreen;
