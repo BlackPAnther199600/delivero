@@ -12,6 +12,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { makeRequest } from '../../services/api';
 
 export default function CustomerHomeScreen({ navigation }) {
   const [searchText, setSearchText] = useState('');
@@ -21,8 +22,51 @@ export default function CustomerHomeScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showPromos, setShowPromos] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
-  const foodCategories = [
+  // Mapping of category names to emoji and colors
+  const categoryEmojis = {
+    'Pizza': '🍕',
+    'Burger': '🍔',
+    'Sushi': '🍣',
+    'Poke': '🥗',
+    'Kebab': '🌮',
+    'Dessert': '🍰',
+    'Cinese': '🥡',
+    'Healthy': '🥙',
+    'Italiano': '🍝',
+    'Seafood': '🦐',
+    'Mexican': '🌶️',
+    'Asian': '🥢',
+    'Italian': '🍝',
+    'Korean': '🍖',
+    'Thai': '🍛',
+  };
+
+  const categoryColors = {
+    'Pizza': '#FFE5CC',
+    'Burger': '#FFF0E6',
+    'Sushi': '#E0F7FF',
+    'Poke': '#E8F5E9',
+    'Kebab': '#FFF3E0',
+    'Dessert': '#FCE4EC',
+    'Cinese': '#FFF9C4',
+    'Healthy': '#E0F2F1',
+    'Italiano': '#F3E5F5',
+    'Seafood': '#B3E5FC',
+    'Mexican': '#FFCCBC',
+    'Asian': '#DCEDC8',
+    'Italian': '#F3E5F5',
+    'Korean': '#FFCCBC',
+    'Thai': '#FFE0B2',
+  };
+
+  const getEmojiForCategory = (name) => categoryEmojis[name] || '🍽️';
+  const getColorForCategory = (name) => categoryColors[name] || '#F0F0F0';
+
+  // Keep fallback categories if API fails
+  const fallbackCategories = [
     { id: 1, name: 'Pizza', emoji: '🍕', color: '#FFE5CC' },
     { id: 2, name: 'Burger', emoji: '🍔', color: '#FFF0E6' },
     { id: 3, name: 'Sushi', emoji: '🍣', color: '#E0F7FF' },
@@ -51,18 +95,47 @@ export default function CustomerHomeScreen({ navigation }) {
 
   useEffect(() => {
     loadCustomerData();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await makeRequest('/restaurants/categories');
+
+      if (response && Array.isArray(response)) {
+        // Map API response to include emoji and color
+        const enrichedCategories = response.map((cat, index) => ({
+          id: cat.id || index,
+          name: cat.name,
+          description: cat.description,
+          restaurant_count: cat.restaurant_count || 0,
+          emoji: getEmojiForCategory(cat.name),
+          color: getColorForCategory(cat.name),
+        }));
+        setCategories(enrichedCategories);
+      } else {
+        setCategories(fallbackCategories);
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      // Fall back to hardcoded categories if API fails
+      setCategories(fallbackCategories);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   const loadCustomerData = async () => {
     try {
       setRefreshing(true);
       // Simulated data load
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Load favorites from AsyncStorage
       const savedFavorites = await AsyncStorage.getItem('favorites');
       if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
-      
+
       // Load recent orders
       const savedOrders = await AsyncStorage.getItem('recentOrders');
       if (savedOrders) setRecentOrders(JSON.parse(savedOrders));
@@ -76,13 +149,13 @@ export default function CustomerHomeScreen({ navigation }) {
   const toggleFavorite = async (restaurant) => {
     const isFavorited = favorites.some(f => f.id === restaurant.id);
     let updatedFavorites;
-    
+
     if (isFavorited) {
       updatedFavorites = favorites.filter(f => f.id !== restaurant.id);
     } else {
       updatedFavorites = [...favorites, restaurant];
     }
-    
+
     setFavorites(updatedFavorites);
     await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
   };
@@ -98,15 +171,15 @@ export default function CustomerHomeScreen({ navigation }) {
 
   const findRestaurants = () => {
     let results = [...allRestaurants];
-    
+
     // Filter by search text
     if (searchText) {
-      results = results.filter(r => 
+      results = results.filter(r =>
         r.name.toLowerCase().includes(searchText.toLowerCase()) ||
         r.category.toLowerCase().includes(searchText.toLowerCase())
       );
     }
-    
+
     // Apply additional filters
     if (activeFilter === 'rating') {
       results.sort((a, b) => b.rating - a.rating);
@@ -115,12 +188,12 @@ export default function CustomerHomeScreen({ navigation }) {
     } else if (activeFilter === 'fast') {
       results = results.filter(r => parseInt(r.time) <= 20);
     }
-    
+
     return results;
   };
 
   const renderPromoCard = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.promoCard}
       onPress={() => applyCoupon(item)}
     >
@@ -162,7 +235,7 @@ export default function CustomerHomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <View style={styles.restaurantStats}>
           <View style={styles.statBadge}>
             <Text style={styles.statText}>⭐ {item.rating}</Text>
@@ -182,7 +255,7 @@ export default function CustomerHomeScreen({ navigation }) {
   const filteredRestaurants = findRestaurants();
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={loadCustomerData} />
@@ -256,7 +329,7 @@ export default function CustomerHomeScreen({ navigation }) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Categorie</Text>
         <FlatList
-          data={foodCategories}
+          data={categories.length > 0 ? categories : fallbackCategories}
           renderItem={renderCategoryItem}
           keyExtractor={(item) => item.id.toString()}
           numColumns={3}
