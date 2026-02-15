@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "ec07c6cc-4c6e-4b1b-b93f-a5371b61818c"
+      }
+    },
+    "android": {
+      "package": "com.romano98.deliveroreporoot"
+    }
+  }
+}
