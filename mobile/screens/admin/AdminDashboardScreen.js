@@ -664,186 +664,184 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8
   },
-  marginTop: 5
-},
   statSubtitle: {
-  fontSize: 11,
-  color: '#bbb',
-  marginTop: 3
-},
+    fontSize: 11,
+    color: '#bbb',
+    marginTop: 3
+  },
   sectionTitle: {
-  fontSize: 14,
-  fontWeight: 'bold',
-  color: '#333',
-  marginVertical: 12
-},
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 12
+  },
   orderItem: {
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 6,
-  marginBottom: 8,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  borderLeftWidth: 4,
-  borderLeftColor: '#FF6B00'
-},
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B00'
+  },
   orderCustomer: {
-  fontSize: 13,
-  fontWeight: '600',
-  color: '#333'
-},
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333'
+  },
   orderStatus: {
-  fontSize: 11,
-  color: '#999',
-  marginTop: 3
-},
+    fontSize: 11,
+    color: '#999',
+    marginTop: 3
+  },
   orderAmount: {
-  fontSize: 13,
-  fontWeight: 'bold',
-  color: '#FF6B00'
-},
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#FF6B00'
+  },
   userItem: {
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 6,
-  marginBottom: 8,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  borderLeftWidth: 3,
-  borderLeftColor: '#2196f3'
-},
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderLeftWidth: 3,
+    borderLeftColor: '#2196f3'
+  },
   userInfo: {
-  flex: 1
-},
+    flex: 1
+  },
   userName: {
-  fontSize: 13,
-  fontWeight: '600',
-  color: '#333'
-},
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333'
+  },
   userEmail: {
-  fontSize: 11,
-  color: '#999',
-  marginTop: 2
-},
+    fontSize: 11,
+    color: '#999',
+    marginTop: 2
+  },
   userRole: {
-  fontSize: 11,
-  color: '#FF6B00',
-  marginTop: 2,
-  fontWeight: '500'
-},
+    fontSize: 11,
+    color: '#FF6B00',
+    marginTop: 2,
+    fontWeight: '500'
+  },
   deleteButton: {
-  backgroundColor: '#d32f2f',
-  paddingVertical: 6,
-  paddingHorizontal: 10,
-  borderRadius: 4
-},
+    backgroundColor: '#d32f2f',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4
+  },
   deleteButtonText: {
-  color: '#fff',
-  fontSize: 11,
-  fontWeight: '600'
-},
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600'
+  },
   ticketItem: {
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 6,
-  marginBottom: 8,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  borderLeftWidth: 3,
-  borderLeftColor: '#9c27b0'
-},
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderLeftWidth: 3,
+    borderLeftColor: '#9c27b0'
+  },
   ticketTitle: {
-  fontSize: 13,
-  fontWeight: '600',
-  color: '#333'
-},
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333'
+  },
   ticketType: {
-  fontSize: 11,
-  color: '#999',
-  marginTop: 2
-},
+    fontSize: 11,
+    color: '#999',
+    marginTop: 2
+  },
   ticketDate: {
-  fontSize: 10,
-  color: '#bbb',
-  marginTop: 2
-},
+    fontSize: 10,
+    color: '#bbb',
+    marginTop: 2
+  },
   ticketStatus: {
-  paddingVertical: 4,
-  paddingHorizontal: 8,
-  borderRadius: 4,
-  marginLeft: 10
-},
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginLeft: 10
+  },
   ticketStatusText: {
-  color: '#fff',
-  fontSize: 10,
-  fontWeight: '600'
-},
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600'
+  },
   actionButton: {
-  paddingVertical: 6,
-  paddingHorizontal: 10,
-  borderRadius: 4,
-  justifyContent: 'center',
-  alignItems: 'center'
-},
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
   actionButtonText: {
-  color: '#fff',
-  fontSize: 12,
-  fontWeight: '600'
-},
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600'
+  },
   primaryButton: {
-  backgroundColor: '#FF6B00',
-  paddingVertical: 10,
-  paddingHorizontal: 14,
-  borderRadius: 8
-},
+    backgroundColor: '#FF6B00',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8
+  },
   primaryButtonText: {
-  color: '#fff',
-  fontWeight: '700'
-},
+    color: '#fff',
+    fontWeight: '700'
+  },
   modalContainer: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: 20,
-  backgroundColor: 'rgba(0,0,0,0.4)'
-},
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)'
+  },
   modalCard: {
-  width: '100%',
-  backgroundColor: '#fff',
-  borderRadius: 8,
-  padding: 16
-},
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16
+  },
   modalInput: {
-  borderWidth: 1,
-  borderColor: '#e0e0e0',
-  borderRadius: 8,
-  padding: 10,
-  marginBottom: 10
-},
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10
+  },
   paymentItem: {
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 6,
-  marginBottom: 8,
-  flexDirection: 'row',
-  justifyContent: 'space-between'
-},
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
   zebra: {
-  backgroundColor: '#f8f8f8'
-},
+    backgroundColor: '#f8f8f8'
+  },
   paymentMethod: {
-  fontSize: 13,
-  fontWeight: '600',
-  color: '#333'
-},
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333'
+  },
   paymentAmount: {
-  fontSize: 13,
-  color: '#FF6B00',
-  fontWeight: 'bold'
-}
+    fontSize: 13,
+    color: '#FF6B00',
+    fontWeight: 'bold'
+  }
 });
 
 export default AdminDashboardScreen;
