@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import axios from 'axios';
+import { makeRequest } from '../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { io } from 'socket.io-client';
@@ -26,7 +26,7 @@ if (Platform.OS !== 'web') {
   }
 }
 
-const API_URL = 'http://192.168.1.5:5000/api';
+const API_URL = 'https://delivero-gyjx.onrender.com/api';
 
 const AdminDashboardScreen = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState('stats');
@@ -60,9 +60,8 @@ const AdminDashboardScreen = ({ navigation, route }) => {
   const loadActiveOrders = async () => {
     try {
       setLoading(true);
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API_URL}/orders/active/all`, { headers });
-      setActiveOrders(response.data || []);
+      const response = await makeRequest('/orders/active/all', { method: 'GET' });
+      setActiveOrders(response || []);
     } catch (error) {
       Alert.alert('Error', 'Failed to load active orders');
     } finally {
@@ -108,19 +107,18 @@ const AdminDashboardScreen = ({ navigation, route }) => {
   const loadAllData = async (authToken) => {
     try {
       setLoading(true);
-      const headers = { Authorization: `Bearer ${authToken}` };
 
       const [statsRes, financeRes, metricsRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/stats`, { headers }),
-        axios.get(`${API_URL}/admin/finance`, { headers }),
-        axios.get(`${API_URL}/admin/metrics`, { headers })
+        makeRequest('/admin/stats', { method: 'GET' }),
+        makeRequest('/admin/finance', { method: 'GET' }),
+        makeRequest('/admin/metrics', { method: 'GET' })
       ]);
 
-      setStats(statsRes.data);
-      setFinance(financeRes.data);
-      setMetrics(metricsRes.data);
+      setStats(statsRes);
+      setFinance(financeRes);
+      setMetrics(metricsRes);
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to load data');
+      Alert.alert('Error', error?.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -129,9 +127,8 @@ const AdminDashboardScreen = ({ navigation, route }) => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API_URL}/admin/users`, { headers });
-      setUsers(response.data);
+      const response = await makeRequest('/admin/users', { method: 'GET' });
+      setUsers(response);
     } catch (error) {
       Alert.alert('Error', 'Failed to load users');
     } finally {
@@ -142,9 +139,8 @@ const AdminDashboardScreen = ({ navigation, route }) => {
   const loadTickets = async () => {
     try {
       setLoading(true);
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`${API_URL}/tickets/admin`, { headers });
-      setTickets(response.data);
+      const response = await makeRequest('/tickets/admin', { method: 'GET' });
+      setTickets(response);
     } catch (error) {
       Alert.alert('Error', 'Failed to load tickets');
     } finally {
@@ -165,8 +161,7 @@ const AdminDashboardScreen = ({ navigation, route }) => {
         text: 'Delete',
         onPress: async () => {
           try {
-            const headers = { Authorization: `Bearer ${token}` };
-            await axios.delete(`${API_URL}/admin/users/${userId}`, { headers });
+            await makeRequest(`/admin/users/${userId}`, { method: 'DELETE' });
             Alert.alert('Success', 'User deleted');
             loadUsers();
           } catch (error) {

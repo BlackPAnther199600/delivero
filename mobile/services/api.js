@@ -159,4 +159,5 @@ export const userAPI = {
   }),
 };
 
-export default { authAPI, ordersAPI, userAPI };
+export { makeRequest };
+export default { authAPI, ordersAPI, userAPI, makeRequest };
