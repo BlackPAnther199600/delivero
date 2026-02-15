@@ -1,4 +1,3 @@
-import axios from 'axios/dist/axios.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Backend configuration
@@ -7,44 +6,55 @@ const API_URL = __DEV__ && typeof window !== 'undefined'
   ? 'http://localhost:5000/api'
   : 'https://delivero-gyjx.onrender.com/api';
 
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Aggiungi token ai request
-apiClient.interceptors.request.use(async (config) => {
+// Helper di fetch con interceptor per il token
+async function makeRequest(endpoint, options = {}) {
   try {
     const token = await AsyncStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
-  } catch (e) {
-    console.error('Errore nel recuperare il token:', e);
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw data || { message: 'Errore nella richiesta' };
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
   }
-  return config;
-});
+}
 
 export const authAPI = {
   register: async (email, password, name) => {
-    try {
-      const response = await apiClient.post('/auth/register', { email, password, name });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Errore nella registrazione' };
-    }
+    return makeRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, name }),
+    });
   },
 
   login: async (email, password) => {
     try {
-      const response = await apiClient.post('/auth/login', { email, password });
-      await AsyncStorage.setItem('token', response.data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-      return response.data;
+      const data = await makeRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      return data;
     } catch (error) {
-      throw error.response?.data || { message: 'Errore nel login' };
+      throw error;
     }
   },
 
@@ -57,88 +67,96 @@ export const authAPI = {
 export const ordersAPI = {
   // Customer endpoints
   getAll: async () => {
-    const res = await apiClient.get('/orders');
-    return res.data;
+    return makeRequest('/orders', { method: 'GET' });
   },
   getMyOrders: async () => {
-    const res = await apiClient.get('/orders/my');
-    return res.data;
+    return makeRequest('/orders/my', { method: 'GET' });
   },
-  create: (data) => apiClient.post('/orders', data),
+  create: (data) => makeRequest('/orders', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
   getAvailable: async () => {
-    const res = await apiClient.get('/orders/available');
-    return res.data;
+    return makeRequest('/orders/available', { method: 'GET' });
   },
   trackOrder: async (id) => {
-    const res = await apiClient.get(`/orders/${id}/track`);
-    return res.data;
+    return makeRequest(`/orders/${id}/track`, { method: 'GET' });
   },
   cancelOrder: async (id) => {
-    const res = await apiClient.put(`/orders/${id}/cancel`);
-    return res.data;
+    return makeRequest(`/orders/${id}/cancel`, { method: 'PUT' });
   },
   rateOrder: async (id, data) => {
-    const res = await apiClient.post(`/orders/${id}/rate`, data);
-    return res.data;
+    return makeRequest(`/orders/${id}/rate`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   // Rider endpoints
   getActiveRiderOrders: async () => {
-    const res = await apiClient.get('/orders/rider/active');
-    return res.data;
+    return makeRequest('/orders/rider/active', { method: 'GET' });
   },
   acceptOrder: async (id) => {
-    const res = await apiClient.put(`/orders/${id}/accept`);
-    return res.data;
+    return makeRequest(`/orders/${id}/accept`, { method: 'PUT' });
   },
   updateOrderStatus: async (id, status) => {
-    const res = await apiClient.put(`/orders/${id}/status`, { status });
-    return res.data;
+    return makeRequest(`/orders/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
   },
   completeOrder: async (id) => {
-    const res = await apiClient.put(`/orders/${id}/complete`);
-    return res.data;
+    return makeRequest(`/orders/${id}/complete`, { method: 'PUT' });
   },
   completeDelivery: async (id) => {
-    const res = await apiClient.put(`/orders/${id}/delivered`);
-    return res.data;
+    return makeRequest(`/orders/${id}/delivered`, { method: 'PUT' });
   },
 
   // Real-time tracking (rider sends location)
   updateRiderLocation: async (orderId, latitude, longitude, eta_minutes) => {
-    const res = await apiClient.post(`/orders/${orderId}/location`, {
-      latitude,
-      longitude,
-      eta_minutes
+    return makeRequest(`/orders/${orderId}/location`, {
+      method: 'POST',
+      body: JSON.stringify({
+        latitude,
+        longitude,
+        eta_minutes
+      }),
     });
-    return res.data;
   },
 
   // Get tracking info (customer/manager views)
   getTrackingInfo: async (orderId) => {
-    const res = await apiClient.get(`/orders/${orderId}/track`);
-    return res.data;
+    return makeRequest(`/orders/${orderId}/track`, { method: 'GET' });
   },
   getTrackHistory: async (orderId) => {
-    const res = await apiClient.get(`/orders/${orderId}/track-history`);
-    return res.data;
+    return makeRequest(`/orders/${orderId}/track-history`, { method: 'GET' });
   },
 
   // Manager: get all active orders with tracking
   getActiveOrdersTracking: async () => {
-    const res = await apiClient.get('/orders/active/all');
-    return res.data;
+    return makeRequest('/orders/active/all', { method: 'GET' });
   },
 
   // Location sharing (riders)
-  sendLocation: (location) => apiClient.post('/rider/location', location),
-  getRiderLocation: (riderId) => apiClient.get(`/rider/${riderId}/location`),
+  sendLocation: (location) => makeRequest('/rider/location', {
+    method: 'POST',
+    body: JSON.stringify(location),
+  }),
+  getRiderLocation: (riderId) => makeRequest(`/rider/${riderId}/location`, {
+    method: 'GET',
+  }),
 };
 
 export const userAPI = {
-  getProfile: () => apiClient.get('/user/profile'),
-  updateProfile: (data) => apiClient.put('/user/profile', data),
-  setPushToken: (token) => apiClient.put('/auth/push-token', { push_token: token }),
+  getProfile: () => makeRequest('/user/profile', { method: 'GET' }),
+  updateProfile: (data) => makeRequest('/user/profile', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  setPushToken: (token) => makeRequest('/auth/push-token', {
+    method: 'PUT',
+    body: JSON.stringify({ push_token: token }),
+  }),
 };
 
-export default apiClient;
+export default { authAPI, ordersAPI, userAPI };
