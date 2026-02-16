@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { makeRequest } from '../../services/api';
 // Se non hai lodash installato, puoi usare un debounce semplice o installarlo con: npm install lodash.debounce
 import debounce from 'lodash.debounce';
@@ -123,10 +124,15 @@ export default function RestaurantsScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#FF6B00', '#FF8C00']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>🍽️ Ristoranti</Text>
         <Text style={styles.headerSubtitle}>Scopri nuove destinazioni</Text>
-      </View>
+      </LinearGradient>
 
       <View style={styles.searchContainer}>
         <TextInput
@@ -173,9 +179,9 @@ export default function RestaurantsScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f8f8' },
-  header: { padding: 16, paddingTop: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  headerSubtitle: { fontSize: 12, color: '#999', marginTop: 4 },
+  header: { padding: 20, paddingTop: 25, backgroundColor: '#FF6B00', borderBottomWidth: 1, borderBottomColor: '#eee', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+  headerSubtitle: { fontSize: 12, color: '#fff', marginTop: 4, opacity: 0.9 },
   searchContainer: { padding: 15, backgroundColor: '#FF6B00' },
   searchInput: { backgroundColor: '#fff', borderRadius: 25, paddingHorizontal: 15, paddingVertical: 10, fontSize: 14 },
   categoriesContainer: { backgroundColor: '#fff', maxHeight: 60 },
@@ -187,8 +193,8 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, color: '#666' },
   restaurantsContent: { padding: 15 },
-  restaurantCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 12, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 3 },
-  restaurantHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  restaurantCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 10, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 3 },
+  restaurantHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   restaurantName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   restaurantCategory: { fontSize: 12, color: '#666' },
   rating: { fontSize: 14, fontWeight: 'bold', color: '#FF6B00' },

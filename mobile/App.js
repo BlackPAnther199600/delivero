@@ -64,7 +64,7 @@ function CustomerTabs({ onLogout }) {
       screenOptions={{
         headerShown: true,
         tabBarActiveTintColor: '#FF6B00',
-        tabBarInactiveTintColor: '#999',
+        tabBarInactiveTintColor: '#000',
         headerBackground: () => (
 
           <LinearGradient

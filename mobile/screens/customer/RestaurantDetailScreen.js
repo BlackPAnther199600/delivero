@@ -217,7 +217,7 @@ export default function RestaurantDetailScreen({ route, navigation }) {
                 <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.restaurantName}>{restaurantDetail?.name}</Text>
                     <Text style={styles.restaurantInfo}>
-                        ⭐ {restaurantDetail?.rating?.toFixed(1)} • ⏱️ {restaurantDetail?.delivery_time}min • 💰 €{restaurantDetail?.delivery_cost?.toFixed(2)}
+                        ⭐ {typeof restaurantDetail?.rating === 'number' ? restaurantDetail.rating.toFixed(1) : 'N/A'} • ⏱️ {restaurantDetail?.delivery_time}min • 💰 €{typeof restaurantDetail?.delivery_cost === 'number' ? restaurantDetail.delivery_cost.toFixed(2) : '0.00'}
                     </Text>
                 </View>
             </View>
