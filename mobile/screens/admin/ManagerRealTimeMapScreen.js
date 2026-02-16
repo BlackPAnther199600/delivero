@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import { io } from 'socket.io-client';
 import { makeRequest } from '../../services/api';
-import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 
 const SOCKET_URL = 'https://delivero-gyjx.onrender.com';
 
 export default function ManagerRealTimeMapScreen() {
     const [riders, setRiders] = useState({});
     const [loading, setLoading] = useState(true);
-    const [mapRegion, setMapRegion] = useState({
-        latitude: 41.8902,
-        longitude: 12.4922,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1,
+    const [region, setRegion] = useState({
+        latitude: 41.880025,
+        longitude: 12.67594,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
     });
 
     const loadActiveOrdersFallback = async () => {
@@ -173,28 +173,51 @@ export default function ManagerRealTimeMapScreen() {
         return <View style={styles.center}><Text>Usa la Dashboard Web per la mappa interattiva</Text></View>;
     }
 
+    // Generate HTML for OpenStreetMap with markers
+    const generateMapHtml = () => {
+        const markers = Object.values(riders).map(r => `
+            L.marker([${r.lat}, ${r.lng}])
+                .addTo(map)
+                .bindPopup('<b>Ordine #${r.orderId}</b><br/>Stato: ${r.status || '—'}<br/>ETA: ${r.eta_minutes != null ? r.eta_minutes + ' min' : '—'}');
+        `).join('\n');
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                <style>
+                    body { margin:0; padding:0; }
+                    #map { position:absolute; top:0; bottom:0; width:100%; height:100%; }
+                </style>
+            </head>
+            <body>
+                <div id="map"></div>
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                <script>
+                    var map = L.map('map').setView([41.880025, 12.67594], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    ${markers}
+                </script>
+            </body>
+            </html>
+        `;
+    };
+
     return (
         <View style={styles.container}>
-            <MapView
+            <WebView
                 style={styles.map}
-                region={mapRegion}
-                onRegionChangeComplete={setMapRegion}
-                showsUserLocation
-            >
-                {Object.values(riders).map((rider) => (
-                    <Marker
-                        key={String(rider.orderId)}
-                        coordinate={{
-                            latitude: parseFloat(rider.lat),
-                            longitude: parseFloat(rider.lng)
-                        }}
-                        title={`Ordine: ${rider.orderId}`}
-                        description={`Stato: ${rider.status || '—'}  ETA: ${rider.eta_minutes != null ? rider.eta_minutes + ' min' : '—'}`}
-                        pinColor={rider.status === 'in_transit' ? 'green' : 'orange'}
-                    />
-                ))}
-            </MapView>
-            {loading && <ActivityIndicator style={styles.loader} size="large" />}
+                source={{ html: generateMapHtml() }}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                startInLoadingState={true}
+                renderLoading={() => <ActivityIndicator style={styles.loader} size="large" />}
+            />
         </View>
     );
 }
