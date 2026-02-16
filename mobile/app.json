@@ -51,7 +51,8 @@
     "extra": {
       "eas": {
         "projectId": "4c2ea20f-23f0-4198-ba8e-fa276531983a"
-      }
+      },
+      "apiUrl": "https://delivero-gyjx.onrender.com/api"
     },
     "owner": "romano98",
     "plugins": [

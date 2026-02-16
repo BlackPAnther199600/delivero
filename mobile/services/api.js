@@ -1,15 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io } from 'socket.io-client';
+import Constants from 'expo-constants';
 
 // Backend configuration
-// Web dev: localhost | Mobile/APK: production backend
-const API_URL = __DEV__ && typeof window !== 'undefined'
-  ? 'https://delivero-gyjx.onrender.com/api'
-  : 'https://delivero-gyjx.onrender.com/api';
-
-const SOCKET_URL = __DEV__ && typeof window !== 'undefined'
-  ? 'https://delivero-gyjx.onrender.com'
-  : 'https://delivero-gyjx.onrender.com';
+// Use Expo Constants to get API URL from app.json extra
+const API_URL = Constants?.expoConfig?.extra?.apiUrl || 'https://delivero-gyjx.onrender.com/api';
+const SOCKET_URL = API_URL.replace('/api', '');
 
 let socket = null;
 

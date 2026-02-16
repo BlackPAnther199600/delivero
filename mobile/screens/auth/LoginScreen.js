@@ -27,7 +27,16 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await authAPI.login(email, password);
+      // Add timeout for Render cold start handling
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Server slow to respond - try again')), 45000)
+      );
+
+      const response = await Promise.race([
+        authAPI.login(email, password),
+        timeoutPromise
+      ]);
+
       console.log('✅ Login riuscito, token salvato');
 
       // Breve pausa per permettere al listener di AsyncStorage di rilevare il cambio
@@ -35,7 +44,11 @@ export default function LoginScreen({ navigation }) {
         Alert.alert('Successo', `Benvenuto ${response.user.name}!`);
       }, 100);
     } catch (error) {
-      Alert.alert('Errore Login', error.message || 'Credenziali non valide');
+      const message = error.message === 'Server slow to respond - try again'
+        ? 'Server in avvio, riprova tra 30 secondi (Render cold start)'
+        : error.message || 'Credenziali non valide';
+
+      Alert.alert('Errore Login', message);
       setLoading(false);
     }
   };

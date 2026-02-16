@@ -32,7 +32,7 @@ app.use(helmet({
 
 // CORS configuration
 const frontendOrigin = process.env.NODE_ENV === 'production'
-  ? 'https://delivero-dubw.vercel.app'
+  ? ['https://delivero-dubw.vercel.app', 'https://delivero-gyjx.onrender.com']
   : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:19007'];
 
 app.use(cors({
