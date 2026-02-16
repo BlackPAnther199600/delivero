@@ -2,7 +2,7 @@
 import { io } from 'socket.io-client';
 import { getTrackingMetrics, compressTrackingPoints } from '../src/utils/polylineCompression.js';
 
-const API = 'http://localhost:5000/api';
+const API = 'https://delivero-gyjx.onrender.com/api';
 const WS_URL = 'http://localhost:5000';
 
 async function login(email, password) {

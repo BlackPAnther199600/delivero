@@ -1,6 +1,6 @@
 (async () => {
   try {
-    const loginRes = await fetch('http://localhost:5000/api/auth/login', {
+    const loginRes = await fetch('https://delivero-gyjx.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'customer@example.com', password: 'password123' })
@@ -11,7 +11,7 @@
       process.exit(1);
     }
     const token = loginJson.token;
-    console.log('Got token:', token ? token.substring(0,20)+'...' : 'none');
+    console.log('Got token:', token ? token.substring(0, 20) + '...' : 'none');
 
     const orderPayload = {
       items: [{ category: 'groceries', description: 'Test order item' }],
@@ -19,7 +19,7 @@
       deliveryAddress: 'Via Roma 1, Milano'
     };
 
-    const createRes = await fetch('http://localhost:5000/api/orders', {
+    const createRes = await fetch('https://delivero-gyjx.onrender.com/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(orderPayload)

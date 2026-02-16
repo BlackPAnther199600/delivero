@@ -71,7 +71,7 @@ export default function CartScreen({ navigation }) {
                     <Text style={styles.emptySubtitle}>Aggiungi prodotti dai ristoranti</Text>
                     <TouchableOpacity
                         style={styles.continueShoppingBtn}
-                        onPress={() => navigation.navigate('RestaurantTabs', { screen: 'Restaurants' })}
+                        onPress={() => navigation.navigate('Restaurants', { screen: 'Restaurants' })}
                     >
                         <Text style={styles.continueShoppingText}>🍽️ Continua lo Shopping</Text>
                     </TouchableOpacity>

@@ -235,14 +235,14 @@ npm start
 
 ### Register Customer
 ```bash
-curl -X POST http://localhost:5000/api/auth/register ^
+curl -X POST https://delivero-gyjx.onrender.com/api/auth/register ^
   -H "Content-Type: application/json" ^
   -d "{"name":"Test User","email":"test@test.com","password":"pass123","role":"customer"}"
 ```
 
 ### Login
 ```bash
-curl -X POST http://localhost:5000/api/auth/login ^
+curl -X POST https://delivero-gyjx.onrender.com/api/auth/login ^
   -H "Content-Type: application/json" ^
   -d "{"email":"customer@example.com","password":"password123"}"
 
@@ -251,7 +251,7 @@ REM Risposta include token JWT
 
 ### Create Order (richiede token)
 ```bash
-curl -X POST http://localhost:5000/api/orders ^
+curl -X POST https://delivero-gyjx.onrender.com/api/orders ^
   -H "Authorization: Bearer YOUR_TOKEN_HERE" ^
   -H "Content-Type: application/json" ^
   -d "{"description":"Pizza","address":"Via Roma 1","total_price":15,"category":"food"}"

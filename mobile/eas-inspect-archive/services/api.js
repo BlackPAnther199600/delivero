@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Auto-detect: use localhost for web, use LAN IP for mobile emulator/device
 const API_URL = __DEV__ && typeof window !== 'undefined'
-  ? 'http://localhost:5000/api'
+  ? 'https://delivero-gyjx.onrender.com/api'
   : 'http://192.168.1.5:5000/api';
 
 const apiClient = axios.create({

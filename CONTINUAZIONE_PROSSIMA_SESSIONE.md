@@ -135,7 +135,7 @@ Docs:
 
 **Test Order Create**:
 ```bash
-ORDER_ID=$(curl -s -X POST http://localhost:5000/api/orders \
+ORDER_ID=$(curl -s -X POST https://delivero-gyjx.onrender.com/api/orders \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"items":[{"category":"food"}],"totalAmount":10,"deliveryAddress":"Via Roma"}' | jq .order.id)
@@ -143,13 +143,13 @@ ORDER_ID=$(curl -s -X POST http://localhost:5000/api/orders \
 
 **Get Track History**:
 ```bash
-curl http://localhost:5000/api/orders/$ORDER_ID/track-history \
+curl https://delivero-gyjx.onrender.com/api/orders/$ORDER_ID/track-history \
   -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
 **Send Location**:
 ```bash
-curl -X POST http://localhost:5000/api/orders/$ORDER_ID/location \
+curl -X POST https://delivero-gyjx.onrender.com/api/orders/$ORDER_ID/location \
   -H "Authorization: Bearer $RIDER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"latitude":45.0,"longitude":9.0,"eta_minutes":5}'

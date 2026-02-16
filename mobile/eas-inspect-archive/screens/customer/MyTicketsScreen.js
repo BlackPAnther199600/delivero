@@ -28,7 +28,7 @@ const MyTicketsScreen = () => {
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      const response = await api.get('http://localhost:5000/api/tickets/my-tickets', {
+      const response = await api.get('https://delivero-gyjx.onrender.com/api/tickets/my-tickets', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTickets(response.data);
@@ -43,7 +43,7 @@ const MyTicketsScreen = () => {
   const fetchTicketDetails = async (ticketId) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await api.get(`http://localhost:5000/api/tickets/${ticketId}`, {
+      const response = await api.get(`https://delivero-gyjx.onrender.com/api/tickets/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedTicket(response.data);
@@ -59,7 +59,7 @@ const MyTicketsScreen = () => {
       setAddingComment(true);
       const token = await AsyncStorage.getItem('token');
       await api.post(
-        `http://localhost:5000/api/tickets/${selectedTicket.id}/comments`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${selectedTicket.id}/comments`,
         { comment: newComment },
         { headers: { Authorization: `Bearer ${token}` } }
       );

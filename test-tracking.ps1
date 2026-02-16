@@ -1,5 +1,5 @@
 # Test script per il sistema di tracking
-$BASE_URL = "http://localhost:5000/api"
+$BASE_URL = "https://delivero-gyjx.onrender.com/api"
 $RIDER_EMAIL = "rider_test_126357445@test.com"
 $RIDER_PASSWORD = "TestPass123!"
 $CUSTOMER_EMAIL = "customer_test_1124975457@test.com"

@@ -1,20 +1,20 @@
 import { io } from 'socket.io-client';
 
-const API = 'http://localhost:5000/api';
+const API = 'https://delivero-gyjx.onrender.com/api';
 
 async function login(email, password) {
   const res = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
   const j = await res.json();
-  if (!res.ok) throw new Error('Login failed: '+JSON.stringify(j));
+  if (!res.ok) throw new Error('Login failed: ' + JSON.stringify(j));
   return j.token;
 }
 
 async function run() {
   try {
     console.log('Logging in users...');
-    const customerToken = await login('customer@example.com','password123');
-    const riderToken = await login('rider@example.com','password123');
-    const managerToken = await login('manager@example.com','password123');
+    const customerToken = await login('customer@example.com', 'password123');
+    const riderToken = await login('rider@example.com', 'password123');
+    const managerToken = await login('manager@example.com', 'password123');
     console.log('Tokens ok');
 
     // connect sockets
@@ -38,7 +38,7 @@ async function run() {
 
     // Create order as customer
     console.log('Creating order...');
-    const createRes = await fetch(`${API}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${customerToken}` }, body: JSON.stringify({ items:[{category:'test', description:'integ test'}], totalAmount:5.5, deliveryAddress:'Test address 1' }) });
+    const createRes = await fetch(`${API}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${customerToken}` }, body: JSON.stringify({ items: [{ category: 'test', description: 'integ test' }], totalAmount: 5.5, deliveryAddress: 'Test address 1' }) });
     const createJson = await createRes.json();
     console.log('Order created', createJson.order.id);
     const orderId = createJson.order.id;
@@ -49,13 +49,13 @@ async function run() {
     console.log('Accept status', acceptRes.status);
 
     // Simulate rider sending locations
-    for (let i=0;i<3;i++){
-      const lat = 45.0 + Math.random()*0.01;
-      const lon = 9.0 + Math.random()*0.01;
-      const eta = 10 - i*3;
+    for (let i = 0; i < 3; i++) {
+      const lat = 45.0 + Math.random() * 0.01;
+      const lon = 9.0 + Math.random() * 0.01;
+      const eta = 10 - i * 3;
       const locRes = await fetch(`${API}/orders/${orderId}/location`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${riderToken}` }, body: JSON.stringify({ latitude: lat, longitude: lon, eta_minutes: eta }) });
       console.log('Location update', i, await locRes.json());
-      await new Promise(r=>setTimeout(r,1000));
+      await new Promise(r => setTimeout(r, 1000));
     }
 
     // Fetch track history
@@ -63,7 +63,7 @@ async function run() {
     console.log('Track history points:', hist.length);
 
     // Cleanup sockets after short delay
-    await new Promise(r=>setTimeout(r,2000));
+    await new Promise(r => setTimeout(r, 2000));
     customerSocket.disconnect();
     riderSocket.disconnect();
     managerSocket.disconnect();

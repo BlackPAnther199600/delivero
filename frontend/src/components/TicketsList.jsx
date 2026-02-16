@@ -18,7 +18,7 @@ const TicketsList = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        'http://localhost:5000/api/tickets/my-tickets',
+        'https://delivero-gyjx.onrender.com/api/tickets/my-tickets',
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -35,7 +35,7 @@ const TicketsList = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/tickets/${ticketId}`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${ticketId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -54,7 +54,7 @@ const TicketsList = () => {
       setAddingComment(true);
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/tickets/${selectedTicket.id}/comments`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${selectedTicket.id}/comments`,
         { comment },
         {
           headers: { Authorization: `Bearer ${token}` }

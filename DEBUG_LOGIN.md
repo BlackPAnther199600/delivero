@@ -38,7 +38,7 @@
 
 ```javascript
 // Test di login direttamente
-fetch('http://localhost:5000/api/auth/login', {
+fetch('https://delivero-gyjx.onrender.com/api/auth/login', {
   method: 'POST',
   headers: {'Content-Type': 'application/json'},
   body: JSON.stringify({

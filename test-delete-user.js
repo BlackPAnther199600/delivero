@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://delivero-gyjx.onrender.com/api';
 
 async function makeRequest(method, endpoint, body, headers = {}) {
     const options = {

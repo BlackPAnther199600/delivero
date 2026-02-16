@@ -43,7 +43,7 @@ npm install
 Create `.env` file in `frontend/` directory:
 
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=https://delivero-gyjx.onrender.com/api
 REACT_APP_ENV=development
 ```
 
@@ -326,7 +326,7 @@ Configured in `nginx.conf`:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `REACT_APP_API_URL` | Backend API endpoint | `http://localhost:5000/api` |
+| `REACT_APP_API_URL` | Backend API endpoint | `https://delivero-gyjx.onrender.com/api` |
 | `REACT_APP_ENV` | Environment mode | `development` or `production` |
 
 ## Deployment

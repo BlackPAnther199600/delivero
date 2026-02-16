@@ -49,7 +49,7 @@ LOG_LEVEL=info
 
 ```env
 # API
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=https://delivero-gyjx.onrender.com/api
 
 # Environment
 REACT_APP_ENV=development
@@ -62,7 +62,7 @@ REACT_APP_SENTRY_DSN=optional-error-tracking
 
 ```env
 # API
-EXPO_PUBLIC_API_URL=http://localhost:5000/api
+EXPO_PUBLIC_API_URL=https://delivero-gyjx.onrender.com/api
 
 # Environment
 EXPO_PUBLIC_ENV=development

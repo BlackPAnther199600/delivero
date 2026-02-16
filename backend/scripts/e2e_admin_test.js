@@ -7,7 +7,7 @@
  */
 // Uses global fetch (Node 18+). If your Node doesn't support global fetch, install node-fetch and modify the import.
 
-const BASE = process.env.BASE_URL || 'http://localhost:5000/api';
+const BASE = process.env.BASE_URL || 'https://delivero-gyjx.onrender.com/api';
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
 const tokenEnv = process.env.ADMIN_TOKEN;

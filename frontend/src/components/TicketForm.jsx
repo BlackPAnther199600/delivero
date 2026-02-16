@@ -34,7 +34,7 @@ const TicketForm = ({ onTicketCreated }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/tickets',
+        'https://delivero-gyjx.onrender.com/api/tickets',
         {
           type: formData.type,
           title: formData.title,

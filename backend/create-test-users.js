@@ -4,7 +4,7 @@
  * Crea utenti demo per test: customer, rider, manager
  */
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = 'https://delivero-gyjx.onrender.com/api/auth';
 
 const testUsers = [
   {
@@ -33,15 +33,15 @@ async function createTestUsers() {
   for (const user of testUsers) {
     try {
       console.log(`📝 Creando ${user.role}: ${user.email}...`);
-      
+
       const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user)
       });
-      
+
       const data = await response.json();
-      
+
       if (response.status === 201 || response.status === 200) {
         console.log(`✅ ${user.role.toUpperCase()} creato con successo!`);
         console.log(`   ID: ${data.user?.id}`);

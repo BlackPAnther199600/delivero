@@ -23,8 +23,8 @@ const AdminTickets = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [ticketsRes, statsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/tickets/admin/all', { headers }),
-        axios.get('http://localhost:5000/api/tickets/admin/stats', { headers })
+        axios.get('https://delivero-gyjx.onrender.com/api/tickets/admin/all', { headers }),
+        axios.get('https://delivero-gyjx.onrender.com/api/tickets/admin/stats', { headers })
       ]);
 
       setTickets(ticketsRes.data);
@@ -40,7 +40,7 @@ const AdminTickets = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:5000/api/tickets/${ticketId}`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${ticketId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSelectedTicket(response.data);
@@ -55,7 +55,7 @@ const AdminTickets = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `http://localhost:5000/api/tickets/${selectedTicket.id}/status`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${selectedTicket.id}/status`,
         {
           status: updateStatus,
           adminNotes: adminNotes
@@ -75,7 +75,7 @@ const AdminTickets = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:5000/api/tickets/${selectedTicket.id}/comments`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${selectedTicket.id}/comments`,
         { comment: newComment },
         { headers: { Authorization: `Bearer ${token}` } }
       );

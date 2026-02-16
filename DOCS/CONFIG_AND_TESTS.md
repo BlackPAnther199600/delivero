@@ -7,11 +7,11 @@ Configurazioni richieste
   - FRONTEND_URL (opzionale) - singolo URL per socket
 
 - FRONTEND (.env nella cartella frontend):
-  - REACT_APP_API_URL=http://localhost:5000/api
+  - REACT_APP_API_URL=https://delivero-gyjx.onrender.com/api
   - REACT_APP_WS_URL=http://localhost:5000
 
 - MOBILE (Expo) (.env o config):
-  - API_URL=http://localhost:5000/api
+  - API_URL=https://delivero-gyjx.onrender.com/api
   - WS_URL=http://localhost:5000
 
 Cose da fare per abilitare push reali (opzionale):
@@ -52,19 +52,19 @@ Questo script effettua:
 
 ```bash
 # Login
-curl -X POST http://localhost:5000/api/auth/login -H "Content-Type: application/json" -d '{"email":"customer@example.com","password":"password123"}'
+curl -X POST https://delivero-gyjx.onrender.com/api/auth/login -H "Content-Type: application/json" -d '{"email":"customer@example.com","password":"password123"}'
 
 # Create order (customer)
-curl -X POST http://localhost:5000/api/orders -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"items":[{"category":"food","description":"pizza"}],"totalAmount":10.5,"deliveryAddress":"Via Roma 1"}'
+curl -X POST https://delivero-gyjx.onrender.com/api/orders -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"items":[{"category":"food","description":"pizza"}],"totalAmount":10.5,"deliveryAddress":"Via Roma 1"}'
 
 # Get active orders (manager)
-curl -X GET http://localhost:5000/api/orders/active/all -H "Authorization: Bearer <MANAGER_TOKEN>"
+curl -X GET https://delivero-gyjx.onrender.com/api/orders/active/all -H "Authorization: Bearer <MANAGER_TOKEN>"
 
 # Update rider location
-curl -X POST http://localhost:5000/api/orders/<ORDER_ID>/location -H "Content-Type: application/json" -H "Authorization: Bearer <RIDER_TOKEN>" -d '{"latitude":45.0,"longitude":9.0,"eta_minutes":5}'
+curl -X POST https://delivero-gyjx.onrender.com/api/orders/<ORDER_ID>/location -H "Content-Type: application/json" -H "Authorization: Bearer <RIDER_TOKEN>" -d '{"latitude":45.0,"longitude":9.0,"eta_minutes":5}'
 
 # Get track history
-curl -X GET http://localhost:5000/api/orders/<ORDER_ID>/track-history -H "Authorization: Bearer <TOKEN>"
+curl -X GET https://delivero-gyjx.onrender.com/api/orders/<ORDER_ID>/track-history -H "Authorization: Bearer <TOKEN>"
 ```
 
 Note rapide

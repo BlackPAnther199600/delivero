@@ -197,7 +197,7 @@ docker-compose up --build
 
 ### Create Ticket
 ```bash
-curl -X POST http://localhost:5000/api/tickets \
+curl -X POST https://delivero-gyjx.onrender.com/api/tickets \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -210,19 +210,19 @@ curl -X POST http://localhost:5000/api/tickets \
 
 ### Get My Tickets
 ```bash
-curl http://localhost:5000/api/tickets/my-tickets \
+curl https://delivero-gyjx.onrender.com/api/tickets/my-tickets \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Admin Get All
 ```bash
-curl http://localhost:5000/api/tickets/admin/all \
+curl https://delivero-gyjx.onrender.com/api/tickets/admin/all \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Admin Statistics
 ```bash
-curl http://localhost:5000/api/tickets/admin/stats \
+curl https://delivero-gyjx.onrender.com/api/tickets/admin/stats \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

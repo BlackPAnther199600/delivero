@@ -37,8 +37,8 @@ const AdminTicketsScreen = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [ticketsRes, statsRes] = await Promise.all([
-        api.get('http://localhost:5000/api/tickets/admin/all', { headers }),
-        api.get('http://localhost:5000/api/tickets/admin/stats', { headers })
+        api.get('https://delivero-gyjx.onrender.com/api/tickets/admin/all', { headers }),
+        api.get('https://delivero-gyjx.onrender.com/api/tickets/admin/stats', { headers })
       ]);
 
       setTickets(ticketsRes.data);
@@ -54,7 +54,7 @@ const AdminTicketsScreen = () => {
   const fetchTicketDetails = async (ticketId) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await api.get(`http://localhost:5000/api/tickets/${ticketId}`, {
+      const response = await api.get(`https://delivero-gyjx.onrender.com/api/tickets/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedTicket(response.data);
@@ -69,7 +69,7 @@ const AdminTicketsScreen = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       await api.patch(
-        `http://localhost:5000/api/tickets/${selectedTicket.id}/status`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${selectedTicket.id}/status`,
         { status: updateStatus, adminNotes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -88,7 +88,7 @@ const AdminTicketsScreen = () => {
       setAddingComment(true);
       const token = await AsyncStorage.getItem('token');
       await api.post(
-        `http://localhost:5000/api/tickets/${selectedTicket.id}/comments`,
+        `https://delivero-gyjx.onrender.com/api/tickets/${selectedTicket.id}/comments`,
         { comment: newComment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   },
   detailCard: {
     backgroundColor: 'white',
-    borderRadius:8,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 16
   },

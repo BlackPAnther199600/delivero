@@ -137,10 +137,10 @@ cd backend
 npm run dev
 
 # In un'altra terminal, testa gli endpoint
-curl -X GET http://localhost:5000/api/health
+curl -X GET https://delivero-gyjx.onrender.com/api/health
 
 # Crea un bill payment
-curl -X POST http://localhost:5000/api/bill-payments \
+curl -X POST https://delivero-gyjx.onrender.com/api/bill-payments \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"billId": 1, "paymentMethod": "cash"}'

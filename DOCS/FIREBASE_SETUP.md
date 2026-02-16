@@ -79,7 +79,7 @@ Il mobile già registra token via `expo-notifications`:
 
 ```bash
 # Login e chiedi il profilo
-curl -X GET http://localhost:5000/api/auth/me \
+curl -X GET https://delivero-gyjx.onrender.com/api/auth/me \
   -H "Authorization: Bearer <TOKEN>"
 
 # Verifica che users.push_token sia popolato

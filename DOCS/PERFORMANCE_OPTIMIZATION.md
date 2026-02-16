@@ -136,7 +136,7 @@ node backend/scripts/test_push_and_batching.js
 Check buffer stats anytime:
 
 ```bash
-curl http://localhost:5000/api/debug/batcher-stats -H "Authorization: Bearer <TOKEN>"
+curl https://delivero-gyjx.onrender.com/api/debug/batcher-stats -H "Authorization: Bearer <TOKEN>"
 # Response: { bufferedOrders: 12, orders: [1, 5, 23, ...] }
 ```
 
