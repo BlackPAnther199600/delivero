@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { ordersAPI } from '../../services/api';
+import { useRiderLocationSender } from '../../hooks/useRiderLocationSender';
 
 export default function RiderActiveScreen() {
   const [activeOrders, setActiveOrders] = useState([]);
@@ -24,35 +25,41 @@ export default function RiderActiveScreen() {
     } catch (e) { Alert.alert("Errore", "Impossibile aggiornare lo stato."); }
   };
 
+  const ActiveOrderCard = ({ item }) => {
+    useRiderLocationSender(item?.id, item?.status);
+
+    return (
+      <View style={styles.activeCard}>
+        <Text style={styles.statusBadge}>{item.status.toUpperCase()}</Text>
+        <Text style={{ fontWeight: 'bold' }}>Cliente: {item.customer_name || 'Utente'}</Text>
+        <Text>📍 {item.delivery_address}</Text>
+
+        <View style={styles.row}>
+          {item.status === 'accepted' && (
+            <TouchableOpacity style={styles.btnPickup} onPress={() => updateStatus(item.id, 'pickup')}>
+              <Text style={styles.btnText}>Ritirato</Text>
+            </TouchableOpacity>
+          )}
+          {(item.status === 'pickup' || item.status === 'accepted') && (
+            <TouchableOpacity style={styles.btnTransit} onPress={() => updateStatus(item.id, 'in_transit')}>
+              <Text style={styles.btnText}>In Viaggio</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.btnComplete} onPress={() => updateStatus(item.id, 'delivered')}>
+            <Text style={styles.btnText}>Consegnato ✅</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={{ flex: 1, padding: 15 }}>
       <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 15 }}>Le tue consegne attive</Text>
       <FlatList
         data={activeOrders}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.activeCard}>
-            <Text style={styles.statusBadge}>{item.status.toUpperCase()}</Text>
-            <Text style={{ fontWeight: 'bold' }}>Cliente: {item.customer_name || 'Utente'}</Text>
-            <Text>📍 {item.delivery_address}</Text>
-
-            <View style={styles.row}>
-              {item.status === 'accepted' && (
-                <TouchableOpacity style={styles.btnPickup} onPress={() => updateStatus(item.id, 'pickup')}>
-                  <Text style={styles.btnText}>Ritirato</Text>
-                </TouchableOpacity>
-              )}
-              {(item.status === 'pickup' || item.status === 'accepted') && (
-                <TouchableOpacity style={styles.btnTransit} onPress={() => updateStatus(item.id, 'in_transit')}>
-                  <Text style={styles.btnText}>In Viaggio</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity style={styles.btnComplete} onPress={() => updateStatus(item.id, 'delivered')}>
-                <Text style={styles.btnText}>Consegnato ✅</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+        renderItem={({ item }) => <ActiveOrderCard item={item} />}
       />
     </View>
   );

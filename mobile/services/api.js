@@ -278,5 +278,46 @@ export const userAPI = {
   }),
 };
 
+export const adminAPI = {
+  getStats: () => makeRequest('/admin/stats', { method: 'GET' }),
+  getAllOrders: () => makeRequest('/admin/orders', { method: 'GET' }),
+  getAllUsers: () => makeRequest('/admin/users', { method: 'GET' }),
+  updateUserRole: (userId, role) => makeRequest(`/admin/users/${userId}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ newRole: role }),
+  }),
+  updateUser: (userId, data) => makeRequest(`/admin/users/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteUser: (userId) => makeRequest(`/admin/users/${userId}`, { method: 'DELETE' }),
+  getFinanceReport: () => makeRequest('/admin/finance', { method: 'GET' }),
+  getServiceMetrics: () => makeRequest('/admin/metrics', { method: 'GET' }),
+  getTicketStats: () => makeRequest('/admin/tickets/stats', { method: 'GET' }),
+  getAdminTickets: () => makeRequest('/tickets/admin', { method: 'GET' })
+};
+
+export const paymentsAPI = {
+  createCashPayment: (orderId) => makeRequest('/payments/cash/create', {
+    method: 'POST',
+    body: JSON.stringify({ orderId }),
+  }),
+
+  markCashCollected: (orderId) => makeRequest('/payments/cash/collected', {
+    method: 'POST',
+    body: JSON.stringify({ orderId }),
+  }),
+
+  createStripePayment: (orderId) => makeRequest('/payments/create', {
+    method: 'POST',
+    body: JSON.stringify({ orderId }),
+  }),
+
+  confirmStripePayment: (orderId, paymentIntentId) => makeRequest('/payments/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ orderId, paymentIntentId }),
+  }),
+};
+
 export { makeRequest };
-export default { authAPI, ordersAPI, userAPI, makeRequest };
+export default { authAPI, ordersAPI, userAPI, adminAPI, paymentsAPI, makeRequest };

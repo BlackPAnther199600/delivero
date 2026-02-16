@@ -1,9 +1,10 @@
 import express from 'express';
-import { 
-  getAdminStats, 
-  getAllOrders, 
-  getAllUsers, 
+import {
+  getAdminStats,
+  getAllOrders,
+  getAllUsers,
   updateUserRole,
+  updateUser,
   deleteUser,
   getFinanceReport,
   getServiceMetrics,
@@ -23,6 +24,7 @@ router.get('/finance', getFinanceReport);
 router.get('/metrics', getServiceMetrics);
 router.get('/tickets/stats', getTicketStats);
 router.put('/users/:userId/role', updateUserRole);
+router.put('/users/:userId', updateUser);
 router.delete('/users/:userId', deleteUser);
 
 export default router;

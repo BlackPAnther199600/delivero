@@ -26,6 +26,7 @@ export default function CustomerHomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [viewMode, setViewMode] = useState('list'); // 'list' o 'map'
   const [userLocation, setUserLocation] = useState(null);
+  const [mapRegion, setMapRegion] = useState(null);
   const [restaurants, setRestaurants] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,8 +55,14 @@ export default function CustomerHomeScreen({ navigation }) {
       Alert.alert("GPS disattivato", "Usa la posizione per vedere i servizi a Roma Est.");
       return;
     }
-    let loc = await Location.getCurrentPositionAsync({});
+    let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
     setUserLocation(loc.coords);
+    setMapRegion({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+      latitudeDelta: 0.04,
+      longitudeDelta: 0.04,
+    });
   };
 
   const loadCategories = async () => {
@@ -177,12 +184,13 @@ export default function CustomerHomeScreen({ navigation }) {
         <MapView
           provider={PROVIDER_GOOGLE}
           style={styles.map}
-          initialRegion={{
+          region={mapRegion || {
             latitude: userLocation?.latitude || 41.8800,
             longitude: userLocation?.longitude || 12.6759,
             latitudeDelta: 0.04,
             longitudeDelta: 0.04,
           }}
+          onRegionChangeComplete={setMapRegion}
           showsUserLocation={true}
         >
           {filteredRestaurants.map(rest => (

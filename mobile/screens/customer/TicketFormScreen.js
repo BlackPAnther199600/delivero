@@ -11,7 +11,7 @@ import {
   Picker
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '../services/api';
+import { makeRequest } from '../../services/api';
 
 const TicketFormScreen = ({ navigation, onTicketCreated }) => {
   const [formData, setFormData] = useState({
@@ -43,9 +43,9 @@ const TicketFormScreen = ({ navigation, onTicketCreated }) => {
 
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('token');
-      const response = await api.post('https://delivero-gyjx.onrender.com/api/tickets', formData, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await makeRequest('/tickets', {
+        method: 'POST',
+        body: JSON.stringify(formData)
       });
 
       Alert.alert(
@@ -56,14 +56,14 @@ const TicketFormScreen = ({ navigation, onTicketCreated }) => {
             text: 'OK',
             onPress: () => {
               setFormData({ type: 'complaint', title: '', description: '' });
-              if (onTicketCreated) onTicketCreated(response.data);
+              if (onTicketCreated) onTicketCreated(response);
               navigation.goBack();
             }
           }
         ]
       );
     } catch (error) {
-      Alert.alert('Errore', error.response?.data?.error || 'Errore nella creazione del ticket');
+      Alert.alert('Errore', error?.error || error?.message || 'Errore nella creazione del ticket');
     } finally {
       setLoading(false);
     }

@@ -23,6 +23,7 @@ if (Platform.OS !== 'web') {
   }
 }
 import { ordersAPI } from '../../services/api';
+import * as Location from 'expo-location';
 
 // Leaflet Map for Web
 const LeafletTrackingMap = ({ riderLocation, customerLocation, order, history = [] }) => {
@@ -185,6 +186,25 @@ export default function CustomerOrderTrackingScreen({ route, navigation }) {
     }
 
     loadTrackingInfo();
+
+    // Get real customer location on native platforms
+    const loadNativeCustomerLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setCustomerLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+      } catch (e) {
+        // ignore and fallback to default
+      }
+    };
+
+    if (Platform.OS !== 'web') {
+      loadNativeCustomerLocation();
+    }
 
     // Get real customer location if on web
     if (Platform.OS === 'web' && navigator.geolocation) {

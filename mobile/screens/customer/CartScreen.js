@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -7,11 +7,20 @@ import {
     TouchableOpacity,
     Alert,
     ScrollView,
+    Modal,
+    TextInput,
+    ActivityIndicator,
 } from 'react-native';
 import { useCart } from '../../context/CartContext';
+import { ordersAPI, paymentsAPI } from '../../services/api';
+import * as Location from 'expo-location';
 
 export default function CartScreen({ navigation }) {
     const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
+    const [checkoutVisible, setCheckoutVisible] = useState(false);
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [placingOrder, setPlacingOrder] = useState(false);
 
     const handleCheckout = () => {
         if (cart.items.length === 0) {
@@ -19,8 +28,80 @@ export default function CartScreen({ navigation }) {
             return;
         }
 
-        // TODO: Implement checkout flow
-        Alert.alert('Checkout', `Totale: €${cart.totalPrice.toFixed(2)}\n\nCheckout non implementato ancora`);
+        setCheckoutVisible(true);
+    };
+
+    const tryGetDeliveryCoords = async () => {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') return { delivery_latitude: null, delivery_longitude: null };
+            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+            return {
+                delivery_latitude: loc.coords.latitude,
+                delivery_longitude: loc.coords.longitude,
+            };
+        } catch (e) {
+            return { delivery_latitude: null, delivery_longitude: null };
+        }
+    };
+
+    const confirmCheckout = async () => {
+        if (!deliveryAddress || !deliveryAddress.trim()) {
+            Alert.alert('Indirizzo mancante', 'Inserisci un indirizzo di consegna');
+            return;
+        }
+        if (!cart.items?.length) {
+            Alert.alert('Carrello vuoto', 'Aggiungi alcuni prodotti prima di procedere');
+            return;
+        }
+
+        setPlacingOrder(true);
+        try {
+            const coords = await tryGetDeliveryCoords();
+
+            const orderPayload = {
+                restaurantId: cart.restaurantId || null,
+                items: cart.items.map(i => ({
+                    id: i.id,
+                    name: i.name,
+                    price: i.price,
+                    quantity: i.quantity,
+                    customizations: i.customizations || [],
+                })),
+                totalAmount: cart.totalPrice,
+                deliveryAddress: deliveryAddress.trim(),
+                ...coords,
+            };
+
+            const created = await ordersAPI.create(orderPayload);
+            const orderId = created?.order?.id;
+            if (!orderId) {
+                throw new Error('Order id missing from server response');
+            }
+
+            if (paymentMethod === 'cash') {
+                await paymentsAPI.createCashPayment(orderId);
+                Alert.alert('Ordine creato', 'Pagamento in contanti alla consegna');
+            } else {
+                try {
+                    const stripeRes = await paymentsAPI.createStripePayment(orderId);
+                    Alert.alert('Stripe', 'Pagamento Stripe creato (integrazione UI in arrivo)');
+                } catch (e) {
+                    const msg = e?.message || e?.error || 'Errore Stripe';
+                    Alert.alert('Stripe non disponibile', msg);
+                }
+            }
+
+            clearCart();
+            setCheckoutVisible(false);
+            setDeliveryAddress('');
+            setPaymentMethod('cash');
+            navigation.navigate('OrderTracking', { orderId });
+        } catch (e) {
+            Alert.alert('Errore checkout', e?.message || 'Errore');
+        } finally {
+            setPlacingOrder(false);
+        }
     };
 
     const renderCartItem = ({ item }) => (
@@ -135,6 +216,70 @@ export default function CartScreen({ navigation }) {
             >
                 <Text style={styles.checkoutText}>💳 Procedi al Checkout</Text>
             </TouchableOpacity>
+
+            <Modal
+                visible={checkoutVisible}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setCheckoutVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Checkout</Text>
+
+                        <Text style={styles.modalLabel}>Indirizzo di consegna</Text>
+                        <TextInput
+                            value={deliveryAddress}
+                            onChangeText={setDeliveryAddress}
+                            placeholder="Es: Via Roma 10, Roma"
+                            style={styles.modalInput}
+                        />
+
+                        <Text style={styles.modalLabel}>Metodo di pagamento</Text>
+                        <View style={styles.payRow}>
+                            <TouchableOpacity
+                                style={[styles.payBtn, paymentMethod === 'cash' && styles.payBtnActive]}
+                                onPress={() => setPaymentMethod('cash')}
+                                disabled={placingOrder}
+                            >
+                                <Text style={[styles.payBtnText, paymentMethod === 'cash' && styles.payBtnTextActive]}>Contanti</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.payBtn, paymentMethod === 'stripe' && styles.payBtnActive]}
+                                onPress={() => setPaymentMethod('stripe')}
+                                disabled={placingOrder}
+                            >
+                                <Text style={[styles.payBtnText, paymentMethod === 'stripe' && styles.payBtnTextActive]}>Carta (Stripe)</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.modalSummary}>
+                            <Text style={styles.modalSummaryText}>Totale: €{cart.totalPrice.toFixed(2)}</Text>
+                        </View>
+
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity
+                                style={[styles.modalActionBtn, styles.modalCancelBtn]}
+                                onPress={() => setCheckoutVisible(false)}
+                                disabled={placingOrder}
+                            >
+                                <Text style={styles.modalCancelText}>Annulla</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalActionBtn, styles.modalConfirmBtn]}
+                                onPress={confirmCheckout}
+                                disabled={placingOrder}
+                            >
+                                {placingOrder ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={styles.modalConfirmText}>Conferma</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -322,6 +467,101 @@ const styles = StyleSheet.create({
     checkoutText: {
         fontSize: 14,
         fontWeight: 'bold',
+        color: '#fff',
+    },
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        padding: 16,
+    },
+    modalCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 16,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        color: '#333',
+    },
+    modalLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666',
+        marginTop: 10,
+        marginBottom: 6,
+    },
+    modalInput: {
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        backgroundColor: '#fafafa',
+    },
+    payRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    payBtn: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    payBtnActive: {
+        borderColor: '#FF6B00',
+        backgroundColor: '#FFF0E6',
+    },
+    payBtnText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#666',
+    },
+    payBtnTextActive: {
+        color: '#FF6B00',
+    },
+    modalSummary: {
+        marginTop: 14,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+    },
+    modalSummaryText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 10,
+        marginTop: 14,
+    },
+    modalActionBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalCancelBtn: {
+        backgroundColor: '#f1f5f9',
+    },
+    modalConfirmBtn: {
+        backgroundColor: '#FF6B00',
+    },
+    modalCancelText: {
+        fontWeight: '800',
+        color: '#334155',
+    },
+    modalConfirmText: {
+        fontWeight: '800',
         color: '#fff',
     },
 });

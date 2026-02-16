@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { ticketsAPI, makeRequest } from '../../services/api';
+import { makeRequest } from '../../services/api';
 
 export default function AdminTicketsScreen() {
   const [tickets, setTickets] = useState([]);
@@ -9,8 +9,8 @@ export default function AdminTicketsScreen() {
   const fetchAll = async () => {
     try {
       setLoading(true);
-      // Usiamo l'endpoint specifico per admin
-      const data = await makeRequest('/admin/tickets', { method: 'GET' });
+      // Endpoint admin in backend: GET /tickets/admin
+      const data = await makeRequest('/tickets/admin', { method: 'GET' });
       setTickets(data);
     } catch (e) {
       Alert.alert("Errore", "Impossibile recuperare i ticket");
@@ -23,9 +23,10 @@ export default function AdminTicketsScreen() {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await makeRequest(`/admin/tickets/${id}/status`, {
+      // Backend: PATCH /tickets/:id/status
+      await makeRequest(`/tickets/${id}/status`, {
         method: 'PATCH',
-        body: { status: newStatus }
+        body: JSON.stringify({ status: newStatus })
       });
       Alert.alert("Fatto", "Stato ticket aggiornato");
       fetchAll();

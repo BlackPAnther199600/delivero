@@ -304,6 +304,14 @@ function ManagerStack({ token, user, onLogout }) {
         }}
         initialParams={{ token }}
       />
+      <Stack.Screen
+        name="OrderTracking"
+        component={CustomerOrderTrackingScreen}
+        options={{
+          title: '📍 Tracciamento Ordine',
+        }}
+        initialParams={{ token }}
+      />
     </Stack.Navigator>
   );
 }
@@ -367,21 +375,26 @@ export default function App() {
     bootstrapAsync();
 
     // Listener per rilevare i cambiamenti di AsyncStorage (login)
+    let lastToken = null;
+    let lastUser = null;
+
     const checkTokenPeriodically = setInterval(async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         const user = await AsyncStorage.getItem('user');
         const parsedUser = user ? JSON.parse(user) : null;
 
-        // Se il token è stato salvato, aggiorna lo stato
-        if (token && parsedUser && !state.userToken) {
+        // Aggiorna solo se il token è cambiato
+        if (token && parsedUser && token !== lastToken) {
           console.log('🔄 Token rilevato dopo login, aggiornamento stato...');
           dispatch({ type: 'RESTORE_TOKEN', token, user: parsedUser });
+          lastToken = token;
+          lastUser = parsedUser;
         }
       } catch (e) {
         console.error('Error checking token:', e);
       }
-    }, 500); // Controlla ogni 500ms
+    }, 2000); // Controlla ogni 2 secondi invece di 500ms
 
     // Try to register push token for logged in user
     const registerPush = async () => {

@@ -35,6 +35,58 @@ export const getAdminStats = async (req, res) => {
   }
 };
 
+export const updateUser = async (req, res) => {
+  try {
+    const adminId = req.user?.userId;
+    const { userId } = req.params;
+    const { name, email, role } = req.body;
+
+    if (!adminId || !userId) {
+      return res.status(400).json({ message: 'Missing required parameters' });
+    }
+
+    // Check if requester is admin/manager
+    const adminResult = await db.query('SELECT role FROM users WHERE id = $1', [adminId]);
+    if (adminResult.rows.length === 0 || (adminResult.rows[0].role !== 'admin' && adminResult.rows[0].role !== 'manager')) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const targetId = parseInt(userId);
+    if (!Number.isFinite(targetId)) {
+      return res.status(400).json({ message: 'Invalid userId' });
+    }
+
+    if (typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+    if (typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const allowedRoles = ['customer', 'rider', 'manager', 'admin'];
+    const roleValue = role ? String(role) : null;
+    if (roleValue && !allowedRoles.includes(roleValue)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const result = await db.query(
+      'UPDATE users SET name = $1, email = $2, role = COALESCE($3, role) WHERE id = $4 RETURNING id, email, name, role',
+      [name.trim(), email.trim().toLowerCase(), roleValue, targetId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User updated', user: result.rows[0] });
+  } catch (error) {
+    if (error?.code === '23505') {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
+    res.status(500).json({ message: 'Error updating user', error: error.message });
+  }
+};
+
 export const getAllOrders = async (req, res) => {
   try {
     const userId = req.user.userId;
