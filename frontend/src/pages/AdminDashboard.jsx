@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await adminAPI.getAllOrders();
-      setOrders(response.data);
+      setOrders(Array.isArray(response) ? response : response.data || []);
     } catch (err) {
       setError(err.response?.data?.message || "Error loading orders");
     } finally {
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await adminAPI.getAllUsers();
-      setUsers(response.data);
+      setUsers(Array.isArray(response) ? response : response.data || []);
     } catch (err) {
       setError(err.response?.data?.message || "Error loading users");
     } finally {
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await ticketsAPI.getAdminTickets();
-      setTickets(response.data);
+      setTickets(Array.isArray(response) ? response : response.data || []);
     } catch (err) {
       setError(err.response?.data?.message || "Error loading tickets");
     } finally {
