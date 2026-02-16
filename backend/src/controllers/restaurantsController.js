@@ -131,12 +131,15 @@ export const getRestaurant = async (req, res) => {
 export const getCategories = async (req, res) => {
     try {
         const result = await db.query(
-            `SELECT DISTINCT category FROM restaurant_categories 
-       WHERE is_active = true 
-       ORDER BY display_order ASC`
+            `SELECT category 
+             FROM restaurant_categories 
+             WHERE is_active = true AND category IS NOT NULL
+             GROUP BY category 
+             ORDER BY MIN(display_order) ASC`
         );
         res.json(result.rows.map(r => r.category));
     } catch (error) {
+        console.error('Error fetching categories:', error);
         res.status(500).json({ message: 'Error fetching categories', error: error.message });
     }
 };

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   FlatList,
   TextInput,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function RestaurantsScreen({ navigation }) {
   const [searchText, setSearchText] = useState('');
@@ -27,10 +27,12 @@ export default function RestaurantsScreen({ navigation }) {
     { id: 9, name: 'La Trattoria', category: 'Italiano', rating: 4.7, distance: '1.3km', time: '30-45min', reviews: 289 },
   ];
 
+  // Logica di filtro migliorata
   const filteredRestaurants = restaurants.filter(r => {
-    const matchCategory = selectedCategory === 'All' || r.category === selectedCategory;
-    const matchSearch = r.name.toLowerCase().includes(searchText.toLowerCase()) || 
-                       r.category.toLowerCase().includes(searchText.toLowerCase());
+    const categoryToCompare = r.category || r.category_name || '';
+    const matchCategory = selectedCategory === 'All' || categoryToCompare === selectedCategory;
+    const matchSearch = r.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      categoryToCompare.toLowerCase().includes(searchText.toLowerCase());
     return matchCategory && matchSearch;
   });
 
@@ -59,23 +61,31 @@ export default function RestaurantsScreen({ navigation }) {
       <View style={styles.restaurantHeader}>
         <View style={{ flex: 1 }}>
           <Text style={styles.restaurantName}>{item.name}</Text>
-          <Text style={styles.restaurantCategory}>{item.category}</Text>
+          <Text style={styles.restaurantCategory}>
+            {item.category || item.category_name || 'Generico'}
+          </Text>
         </View>
-        <Text style={styles.rating}>⭐ {item.rating}</Text>
+        {/* Protezione per toFixed e conversione sicura in numero */}
+        <Text style={styles.rating}>⭐ {Number(item.rating || 0).toFixed(1)}</Text>
       </View>
-      
+
       <View style={styles.restaurantFooter}>
-        <Text style={styles.reviewCount}>📝 {item.reviews} reviews</Text>
-        <Text style={styles.distance}>📍 {item.distance}</Text>
-        <Text style={styles.time}>⏱️ {item.time}</Text>
+        <Text style={styles.reviewCount}>📝 {item.reviews || 0} reviews</Text>
+        <Text style={styles.distance}>📍 {item.distance || 'N/A'}</Text>
+        <Text style={styles.time}>⏱️ {item.time || '-- min'}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      {/* Search Bar con Gradiente */}
+      <LinearGradient
+        colors={['#FF6B00', '#FF8C00']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.searchContainer}
+      >
         <TextInput
           style={styles.searchInput}
           placeholder="🔍 Cerca ristoranti..."
@@ -83,26 +93,25 @@ export default function RestaurantsScreen({ navigation }) {
           onChangeText={setSearchText}
           placeholderTextColor="#999"
         />
-      </View>
+      </LinearGradient>
 
       {/* Categories Filter */}
-      <FlatList
-        data={categories}
-        renderItem={renderCategoryItem}
-        keyExtractor={(item) => item}
-        horizontal
-        scrollEnabled={true}
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesContainer}
-        contentContainerStyle={styles.categoriesContent}
-      />
+      <View style={styles.categoriesWrapper}>
+        <FlatList
+          data={categories}
+          renderItem={renderCategoryItem}
+          keyExtractor={(item) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesContent}
+        />
+      </View>
 
       {/* Restaurants List */}
       <FlatList
         data={filteredRestaurants}
         renderItem={renderRestaurantItem}
         keyExtractor={(item) => item.id.toString()}
-        scrollEnabled={true}
         style={styles.restaurantsList}
         contentContainerStyle={styles.restaurantsContent}
         ListEmptyComponent={
@@ -123,41 +132,46 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     padding: 15,
-    paddingBottom: 10,
-    backgroundColor: '#FF6B00',
+    paddingTop: 20, // Spazio extra per l'estetica
+    paddingBottom: 20,
   },
   searchInput: {
     backgroundColor: '#fff',
     borderRadius: 25,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    fontSize: 14,
+    fontSize: 15,
     color: '#333',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  categoriesContainer: {
+  categoriesWrapper: {
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   categoriesContent: {
     paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   categoryPill: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 18,
     paddingVertical: 8,
-    marginHorizontal: 5,
+    marginHorizontal: 6,
     borderRadius: 20,
     backgroundColor: '#f0f0f0',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#eee',
   },
   categoryPillActive: {
     backgroundColor: '#FF6B00',
     borderColor: '#FF6B00',
   },
   categoryPillText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#666',
   },
@@ -169,19 +183,17 @@ const styles = StyleSheet.create({
   },
   restaurantsContent: {
     padding: 15,
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
   restaurantCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 15,
     padding: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#eee',
+    marginBottom: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 6,
     elevation: 3,
   },
   restaurantHeader: {
@@ -191,44 +203,48 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   restaurantName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
   restaurantCategory: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 13,
+    color: '#888',
     marginTop: 2,
   },
   rating: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#FF6B00',
+    backgroundColor: '#FFF0E6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   restaurantFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 10,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 12,
   },
   reviewCount: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#999',
   },
   distance: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#999',
   },
   time: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#FF6B00',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 100,
   },
   emptyText: {
     fontSize: 18,

@@ -4,11 +4,11 @@ import { io } from 'socket.io-client';
 // Backend configuration
 // Web dev: localhost | Mobile/APK: production backend
 const API_URL = __DEV__ && typeof window !== 'undefined'
-  ? 'http://localhost:5000/api'
+  ? 'https://delivero-gyjx.onrender.com/api'
   : 'https://delivero-gyjx.onrender.com/api';
 
 const SOCKET_URL = __DEV__ && typeof window !== 'undefined'
-  ? 'http://localhost:5000'
+  ? 'https://delivero-gyjx.onrender.com'
   : 'https://delivero-gyjx.onrender.com';
 
 let socket = null;

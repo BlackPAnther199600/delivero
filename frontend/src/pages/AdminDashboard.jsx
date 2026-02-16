@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { adminAPI, ordersAPI, ticketsAPI } from "../services/api";
 import ManagerTrackingDashboard from "./ManagerTrackingDashboard";
+import TrackingMap from "../components/TrackingMap";
 
 const styles = {
   container: { padding: "20px", maxWidth: "1400px", margin: "0 auto" },
@@ -68,6 +69,9 @@ export default function AdminDashboard() {
   // Tickets
   const [tickets, setTickets] = useState([]);
   const [ticketFilter, setTicketFilter] = useState("open");
+
+  // Tracking
+  const [selectedOrderTracking, setSelectedOrderTracking] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -264,6 +268,7 @@ export default function AdminDashboard() {
                 <th style={styles.tableHeaderCell}>Amount</th>
                 <th style={styles.tableHeaderCell}>Status</th>
                 <th style={styles.tableHeaderCell}>Date</th>
+                <th style={styles.tableHeaderCell}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -274,10 +279,65 @@ export default function AdminDashboard() {
                   <td style={styles.tableCell}>€{order.total_amount}</td>
                   <td style={styles.tableCell}>{order.status}</td>
                   <td style={styles.tableCell}>{new Date(order.created_at).toLocaleDateString('en-US')}</td>
+                  <td style={styles.tableCell}>
+                    <button
+                      style={styles.actionButton(false)}
+                      onClick={() => setSelectedOrderTracking(order.id)}
+                    >
+                      Traccia
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {/* Tracking Map Modal */}
+          {selectedOrderTracking && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                padding: '20px',
+                width: '90%',
+                maxWidth: '900px',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                position: 'relative'
+              }}>
+                <button
+                  onClick={() => setSelectedOrderTracking(null)}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    backgroundColor: '#999',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    cursor: 'pointer',
+                    fontSize: '18px'
+                  }}
+                >
+                  ✕
+                </button>
+                <TrackingMap orderId={selectedOrderTracking} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

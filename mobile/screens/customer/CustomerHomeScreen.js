@@ -103,15 +103,13 @@ export default function CustomerHomeScreen({ navigation }) {
       setCategoriesLoading(true);
       const response = await makeRequest('/restaurants/categories');
 
+      // Il tuo backend ora restituisce un array di stringhe: ["Pizza", "Burger"...]
       if (response && Array.isArray(response)) {
-        // Map API response to include emoji and color
-        const enrichedCategories = response.map((cat, index) => ({
-          id: cat.id || index,
-          name: cat.name,
-          description: cat.description,
-          restaurant_count: cat.restaurant_count || 0,
-          emoji: getEmojiForCategory(cat.name),
-          color: getColorForCategory(cat.name),
+        const enrichedCategories = response.map((catName, index) => ({
+          id: index, // Usiamo l'indice come ID se non c'è
+          name: catName,
+          emoji: getEmojiForCategory(catName),
+          color: getColorForCategory(catName),
         }));
         setCategories(enrichedCategories);
       } else {
@@ -119,7 +117,6 @@ export default function CustomerHomeScreen({ navigation }) {
       }
     } catch (error) {
       console.error('Error loading categories:', error);
-      // Fall back to hardcoded categories if API fails
       setCategories(fallbackCategories);
     } finally {
       setCategoriesLoading(false);

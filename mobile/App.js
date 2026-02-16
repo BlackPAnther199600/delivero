@@ -66,6 +66,7 @@ function CustomerTabs({ onLogout }) {
         tabBarActiveTintColor: '#FF6B00',
         tabBarInactiveTintColor: '#999',
         headerBackground: () => (
+
           <LinearGradient
             colors={['#FF6B00', '#FF8C00']}
             start={{ x: 0, y: 0 }}
