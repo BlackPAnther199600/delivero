@@ -26,7 +26,7 @@ if (Platform.OS !== 'web') {
   }
 }
 
-const API_URL = 'http://192.168.1.5:5000/api';
+const API_URL = 'https://delivero-gyjx.onrender.com/api';
 
 const AdminDashboardScreen = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState('stats');
