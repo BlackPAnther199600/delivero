@@ -54,6 +54,11 @@ export default function RestaurantsScreen({ navigation, route }) {
       params.append('max_delivery_time', filters.max_delivery_time);
       params.append('max_delivery_cost', filters.max_delivery_cost);
 
+      // Limita i risultati quando "All" è selezionato per ridurre il sovraccarico
+      if (category === 'All') {
+        params.append('limit', '20');
+      }
+
       const url = `/restaurants?${params.toString()}`;
       const data = await makeRequest(url, { method: 'GET' });
       setRestaurants(data || []);
