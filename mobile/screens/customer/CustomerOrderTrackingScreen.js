@@ -8,20 +8,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-// Import react-native-maps only on native platforms to avoid web bundler errors
-let MapView, Marker, Polyline;
-if (Platform.OS !== 'web') {
-  try {
-    const Maps = require('react-native-maps');
-    MapView = Maps.default || Maps;
-    Marker = Maps.Marker || Maps.MapMarker || Maps.MarkerAnimated || Maps.MapMarker;
-    Polyline = Maps.Polyline || Maps.MapPolyline;
-  } catch (e) {
-    MapView = null;
-    Marker = null;
-    Polyline = null;
-  }
-}
+import { WebView } from 'react-native-webview';
 import { ordersAPI } from '../../services/api';
 import * as Location from 'expo-location';
 
@@ -291,6 +278,63 @@ export default function CustomerOrderTrackingScreen({ route, navigation }) {
     );
   }
 
+  // Generate HTML for OpenStreetMap with rider and customer tracking
+  const generateCustomerTrackingMapHtml = () => {
+    const riderLat = riderLocation?.latitude || 41.880025;
+    const riderLon = riderLocation?.longitude || 12.67594;
+    const customerLat = customerLocation?.latitude || 41.880025;
+    const customerLon = customerLocation?.longitude || 12.67594;
+
+    const centerLat = (riderLat + customerLat) / 2;
+    const centerLon = (riderLon + customerLon) / 2;
+
+    const polyline = trackHistory.length > 0
+      ? trackHistory.map(p => `[${p.latitude}, ${p.longitude}]`).join(',')
+      : `[[${riderLat}, ${riderLon}], [${customerLat}, ${customerLon}]]`;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <style>
+              body { margin:0; padding:0; }
+              #map { position:absolute; top:0; bottom:0; width:100%; height:100%; }
+          </style>
+      </head>
+      <body>
+          <div id="map"></div>
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <script>
+              var map = L.map('map').setView([${centerLat}, ${centerLon}], 14);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  attribution: '© OpenStreetMap contributors'
+              }).addTo(map);
+              
+              // Rider marker
+              L.marker([${riderLat}, ${riderLon}])
+                  .addTo(map)
+                  .bindPopup('<b>🏍️ Rider</b><br/>Stato: ${order?.status || 'In viaggio'}<br/>ETA: ${order?.eta_minutes || '--'} min');
+              
+              // Customer marker
+              L.marker([${customerLat}, ${customerLon}])
+                  .addTo(map)
+                  .bindPopup('<b>🏠 La tua posizione</b>');
+              
+              // Route polyline
+              L.polyline([${polyline}], { color: '#ef4444', weight: 3 }).addTo(map);
+              
+              // Fit bounds to show both
+              var bounds = L.latLngBounds([[${riderLat}, ${riderLon}], [${customerLat}, ${customerLon}]]);
+              map.fitBounds(bounds, { padding: [50, 50] });
+          </script>
+      </body>
+      </html>
+    `;
+  };
+
   const statusEmoji = {
     pending: '⏳',
     accepted: '✅',
@@ -329,30 +373,16 @@ export default function CustomerOrderTrackingScreen({ route, navigation }) {
 
       {/* Map */}
       {riderLocation && customerLocation && (
-        Platform.OS === 'web' ? (
-          <LeafletTrackingMap
-            riderLocation={riderLocation}
-            customerLocation={customerLocation}
-            order={order}
-            history={trackHistory}
+        <View style={{ height: 300, marginHorizontal: 12, borderRadius: 12, overflow: 'hidden' }}>
+          <WebView
+            style={{ flex: 1 }}
+            source={{ html: generateCustomerTrackingMapHtml() }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => <ActivityIndicator style={styles.mapLoader} size="large" />}
           />
-        ) : (
-          // Native MapView with Polyline
-          <View style={{ height: 300, marginHorizontal: 12, borderRadius: 12, overflow: 'hidden' }}>
-            <MapView style={{ flex: 1 }} initialRegion={{
-              latitude: riderLocation.latitude,
-              longitude: riderLocation.longitude,
-              latitudeDelta: 0.02,
-              longitudeDelta: 0.02,
-            }}>
-              <Marker coordinate={riderLocation} title="Rider" />
-              <Marker coordinate={customerLocation} title="Cliente" />
-              {trackHistory.length > 0 && (
-                <Polyline coordinates={trackHistory} strokeColor="#ef4444" strokeWidth={4} />
-              )}
-            </MapView>
-          </View>
-        )
+        </View>
       )}
 
       {/* Order Details */}
@@ -472,6 +502,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#f0f0f0',
   },
+  mapLoader: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
   detailsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,

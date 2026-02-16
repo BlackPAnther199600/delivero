@@ -12,7 +12,7 @@ import {
   RefreshControl,
   Dimensions
 } from 'react-native';
-import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeRequest } from '../../services/api'; // Usiamo makeRequest come standard
@@ -93,6 +93,52 @@ export default function CustomerHomeScreen({ navigation }) {
     r.name.toLowerCase().includes(searchText.toLowerCase()) ||
     r.category.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  // Generate HTML for OpenStreetMap with restaurant markers
+  const generateCustomerMapHtml = () => {
+    const centerLat = userLocation?.latitude || 41.880025;
+    const centerLon = userLocation?.longitude || 12.67594;
+
+    const markers = filteredRestaurants.map(rest => `
+        L.marker([${rest.latitude || 41.88}, ${rest.longitude || 12.67}])
+            .addTo(map)
+            .bindPopup('<b>${rest.name}</b><br/>${rest.category}<br/><a href="#" onclick="window.ReactNativeWebView.postMessage(\\"restaurant:${rest.id}\\")">Vedi Menu →</a>');
+    `).join('\n');
+
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+            <style>
+                body { margin:0; padding:0; }
+                #map { position:absolute; top:0; bottom:0; width:100%; height:100%; }
+            </style>
+        </head>
+        <body>
+            <div id="map"></div>
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <script>
+                var map = L.map('map').setView([${centerLat}, ${centerLon}], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                ${markers}
+                
+                // Handle restaurant clicks
+                window.ReactNativeWebView.postMessage = function(data) {
+                    if (data.startsWith('restaurant:')) {
+                        // This will be handled by onMessage in WebView
+                        window.location.href = 'delivero://restaurant?' + data;
+                    }
+                };
+            </script>
+        </body>
+        </html>
+    `;
+  };
 
   return (
     <View style={styles.container}>
@@ -181,33 +227,16 @@ export default function CustomerHomeScreen({ navigation }) {
         </ScrollView>
       ) : (
         /* VISTA MAPPA INTERATTIVA */
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          region={mapRegion || {
-            latitude: userLocation?.latitude || 41.8800,
-            longitude: userLocation?.longitude || 12.6759,
-            latitudeDelta: 0.04,
-            longitudeDelta: 0.04,
-          }}
-          onRegionChangeComplete={setMapRegion}
-          showsUserLocation={true}
-        >
-          {filteredRestaurants.map(rest => (
-            <Marker
-              key={rest.id}
-              coordinate={{ latitude: parseFloat(rest.latitude || 41.88), longitude: parseFloat(rest.longitude || 12.67) }}
-            >
-              <Callout onPress={() => navigation.navigate('RestaurantDetail', { restaurant: rest })}>
-                <View style={{ padding: 5, width: 120 }}>
-                  <Text style={{ fontWeight: 'bold' }}>{rest.name}</Text>
-                  <Text style={{ fontSize: 10 }}>{rest.category}</Text>
-                  <Text style={{ color: '#FF6B00', marginTop: 5 }}>Vedi Menu →</Text>
-                </View>
-              </Callout>
-            </Marker>
-          ))}
-        </MapView>
+        <View style={styles.mapContainer}>
+          <WebView
+            style={styles.map}
+            source={{ html: generateCustomerMapHtml() }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => <ActivityIndicator style={styles.mapLoader} size="large" />}
+          />
+        </View>
       )}
     </View>
   );
@@ -234,5 +263,7 @@ const styles = StyleSheet.create({
   restBadge: { backgroundColor: '#FFE5CC', padding: 8, borderRadius: 8 },
   badgeText: { color: '#FF6B00', fontWeight: 'bold', fontSize: 12 },
   map: { flex: 1 },
+  mapContainer: { flex: 1 },
+  mapLoader: { position: 'absolute', top: 20, right: 20 },
   section: { marginBottom: 20 }
 });
