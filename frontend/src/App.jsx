@@ -68,7 +68,7 @@ function App() {
                 onClick={handleLogout}
                 className="navbar-logout"
               >
-                🚪 Logout
+                Logout
               </button>
             </div>
           ) : null}

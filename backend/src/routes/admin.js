@@ -10,6 +10,7 @@ import {
   getServiceMetrics,
   getTicketStats
 } from '../controllers/adminController.js';
+import { triggerSeed } from '../controllers/adminSeedController.js';
 import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -26,5 +27,8 @@ router.get('/tickets/stats', getTicketStats);
 router.put('/users/:userId/role', updateUserRole);
 router.put('/users/:userId', updateUser);
 router.delete('/users/:userId', deleteUser);
+
+// Admin/manager only: trigger seeding manually
+router.post('/seed', authorizeRole(['admin', 'manager']), triggerSeed);
 
 export default router;

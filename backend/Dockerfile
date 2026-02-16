@@ -13,9 +13,13 @@ RUN npm install --production
 # Copy backend source into container
 COPY backend/ .
 
+# Make entrypoint script executable
+RUN chmod +x scripts/entrypoint.sh
+
 # Set working dir to backend for runtime
 WORKDIR /app
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+# Use wrapper entrypoint that runs seed-on-start if DB empty
+ENTRYPOINT ["./scripts/entrypoint.sh"]

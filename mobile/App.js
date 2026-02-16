@@ -89,7 +89,7 @@ function CustomerTabs({ onLogout }) {
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>🏠</Text>,
           headerRight: () => (
             <TouchableOpacity onPress={onLogout} style={{ marginRight: 12 }}>
-              <Text style={{ fontSize: 20 }}>🚪</Text>
+              <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#fff' }}>Logout</Text>
             </TouchableOpacity>
           ),
         }}
@@ -245,7 +245,7 @@ function RiderStack({ onLogout }) {
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>📦</Text>,
           headerRight: () => (
             <TouchableOpacity onPress={onLogout} style={{ marginRight: 12 }}>
-              <Text style={{ fontSize: 20 }}>🚪</Text>
+              <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#fff' }}>Logout</Text>
             </TouchableOpacity>
           ),
         }}
@@ -290,7 +290,7 @@ function ManagerStack({ token, user, onLogout }) {
           title: '⚙️ Admin Dashboard',
           headerRight: () => (
             <TouchableOpacity onPress={onLogout} style={{ marginRight: 12 }}>
-              <Text style={{ fontSize: 20 }}>🚪</Text>
+              <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#fff' }}>Logout</Text>
             </TouchableOpacity>
           ),
         }}
