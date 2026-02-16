@@ -9,7 +9,7 @@ export const getRestaurants = async (req, res) => {
       SELECT 
         id, name, rating, estimated_delivery_time as delivery_time, 
         delivery_cost, image_url, description, address, 
-        latitude, longitude, is_open, is_active, 
+        latitude, longitude, is_open, restaurants.is_active, 
         (SELECT COUNT(*) FROM reviews WHERE restaurant_id = restaurants.id) as review_count
       FROM restaurants
       WHERE restaurants.is_active = true
@@ -24,7 +24,7 @@ export const getRestaurants = async (req, res) => {
         if (category) {
             query += ` AND id IN (
         SELECT DISTINCT restaurant_id FROM restaurant_categories 
-        WHERE name ILIKE $${params.length + 1} AND is_active = true
+        WHERE name ILIKE $${params.length + 1} AND restaurant_categories.is_active = true
       )`;
             params.push(category);
         }
@@ -75,7 +75,7 @@ export const getRestaurant = async (req, res) => {
 
         const restaurant = restaurantRes.rows[0];
 
-        // Get menu categories and items
+        // Get menu categories and items (simplified query without customizations first)
         const menuRes = await db.query(
             `SELECT 
         rc.id as category_id,
@@ -89,12 +89,7 @@ export const getRestaurant = async (req, res) => {
             'image_url', mi.image_url,
             'allergens', mi.allergens,
             'is_available', mi.is_available,
-            'customizations', COALESCE((
-              SELECT json_agg(
-                json_build_object('id', id, 'name', name, 'price', price, 'type', type)
-              ) FROM menu_customizations 
-              WHERE menu_item_id = mi.id AND is_active = true
-            ), '[]'::json)
+            'customizations', '[]'::json
           ) ORDER BY mi.name
         ) FILTER (WHERE mi.id IS NOT NULL), '[]'::json) as items
        FROM restaurant_categories rc
@@ -141,7 +136,7 @@ export const getCategories = async (req, res) => {
         const result = await db.query(
             `SELECT DISTINCT category 
              FROM restaurant_categories 
-             WHERE is_active = true AND category IS NOT NULL
+             WHERE restaurant_categories.is_active = true AND category IS NOT NULL
              ORDER BY category ASC`
         );
         res.json(result.rows.map(r => r.category));

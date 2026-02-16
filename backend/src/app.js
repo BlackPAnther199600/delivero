@@ -16,6 +16,7 @@ import medicalTransportsRoutes from "./routes/medicalTransports.js";
 import documentPickupsRoutes from "./routes/documentPickups.js";
 import ticketsRoutes from "./routes/tickets.js";
 import restaurantsRoutes from "./routes/restaurants.js";
+import notificationsRoutes from "./routes/notifications.js";
 import { initializeSocket } from "./services/socket.js";
 import { authenticateToken } from "./middleware/auth.js";
 
@@ -29,49 +30,31 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// Initialize Socket.IO
-initializeSocket(server);
+// CORS configuration
+const frontendOrigin = process.env.NODE_ENV === 'production'
+  ? 'https://delivero-dubw.vercel.app'
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:19007'];
+
+app.use(cors({
+  origin: frontendOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware
-const frontendOrigin = process.env.FRONTEND_URL || "https://delivero-dubw.vercel.app";
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // allow requests with no origin (like curl, mobile)
-    if (!origin) return callback(null, true);
-    if (origin === frontendOrigin) return callback(null, true);
-    return callback(new Error("CORS policy: origin not allowed"), false);
-  },
-  methods: [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-  ],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "Accept",
-    "X-Requested-With",
-  ],
-  credentials: true, // se usi cookie / authentication basata su cookie; altrimenti può essere false
-};
-
-app.use(cors(corsOptions));
-
-// assicurati che OPTIONS venga gestita prima dei route handlers
-app.options("*", cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
 app.use(generalLimiter);
 
-app.use(express.json({ limit: '10mb' }));
+// Initialize Socket.IO
+initializeSocket(server);
 
-// Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ message: 'Server is running' });
+  res.json({ message: 'Server is running', timestamp: new Date().toISOString() });
 });
 
 // Routes
@@ -86,6 +69,7 @@ app.use("/api/pharmacies", pharmaciesRoutes);
 app.use("/api/medical-transports", medicalTransportsRoutes);
 app.use("/api/document-pickups", documentPickupsRoutes);
 app.use("/api/tickets", ticketsRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

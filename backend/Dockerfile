@@ -5,16 +5,16 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy only backend package files from repo root to ensure correct deps are installed
-COPY backend/package*.json ./
+COPY package*.json ./
 
 # Install backend dependencies
 RUN npm install --production
 
 # Copy backend source into container
-COPY backend/ ./backend/
+COPY . .
 
 # Set working dir to backend for runtime
-WORKDIR /app/backend
+WORKDIR /app
 
 EXPOSE 5000
 
