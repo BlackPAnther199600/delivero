@@ -65,7 +65,11 @@ export default function ManagerRealTimeMapScreen() {
                     const updated = { ...prev, ...next };
                     console.log('[ManagerRealTimeMap] updated riders:', updated);
                     // Force WebView remount to show new markers
-                    setMapKey(k => k + 1);
+                    setMapKey(k => {
+                        const newKey = k + 1;
+                        console.log('[ManagerRealTimeMap] mapKey changing from', k, 'to', newKey);
+                        return newKey;
+                    });
                     return updated;
                 });
             }
@@ -200,11 +204,21 @@ export default function ManagerRealTimeMapScreen() {
 
     // Generate HTML for OpenStreetMap with markers
     const generateMapHtml = () => {
-        const markers = Object.values(riders).map(r => `
+        // Add a visible test marker
+        const testMarker = `
+            L.marker([41.880025, 12.67594])
+                .addTo(map)
+                .bindPopup('<b>TEST - Centro Roma</b><br/>Dovresti vedere questo!')
+                .openPopup();
+        `;
+
+        const riderMarkers = Object.values(riders).map(r => `
             L.marker([${r.lat}, ${r.lng}])
                 .addTo(map)
                 .bindPopup('<b>Ordine #${r.orderId}</b><br/>Stato: ${r.status || '—'}<br/>ETA: ${r.eta_minutes != null ? r.eta_minutes + ' min' : '—'}');
         `).join('\n');
+
+        console.log('[ManagerRealTimeMap] generating HTML with', Object.values(riders).length, 'riders');
 
         return `
             <!DOCTYPE html>
@@ -216,17 +230,35 @@ export default function ManagerRealTimeMapScreen() {
                 <style>
                     body { margin:0; padding:0; }
                     #map { position:absolute; top:0; bottom:0; width:100%; height:100%; }
+                    .debug-info {
+                        position: absolute;
+                        top: 10px;
+                        left: 10px;
+                        background: white;
+                        padding: 5px;
+                        border-radius: 5px;
+                        z-index: 1000;
+                        font-size: 12px;
+                    }
                 </style>
             </head>
             <body>
+                <div class="debug-info">Riders: ${Object.values(riders).length}</div>
                 <div id="map"></div>
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
                 <script>
                     var map = L.map('map').setView([41.880025, 12.67594], 13);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
+                        attribution: 'OpenStreetMap contributors'
                     }).addTo(map);
-                    ${markers}
+                    ${testMarker}
+                    ${riderMarkers}
+                    console.log('Map loaded with ' + Object.values(${JSON.stringify(riders)}).length + ' riders');
+                    
+                    // Force map refresh after 1 second
+                    setTimeout(function() {
+                        map.invalidateSize();
+                    }, 1000);
                 </script>
             </body>
             </html>
