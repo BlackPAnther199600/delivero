@@ -1,174 +1,72 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import API from '../../services/api';
+import { api } from '../../services/api';
 
-const BillPaymentScreen = ({ route }) => {
+const BillPaymentScreen = ({ route, navigation }) => {
   const { billId } = route.params || {};
-  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [barcodeImage, setBarcodeImage] = useState(null);
-  const [qrCodeImage, setQrCodeImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const pickImage = async (setImage) => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  const pickImage = async () => {
+    let result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
+      quality: 0.7,
     });
 
-    if (!result.cancelled) {
-      setImage(result.uri);
+    if (!result.canceled) {
+      setBarcodeImage(result.assets[0].uri);
     }
   };
 
   const handleSubmit = async () => {
-    try {
-      setLoading(true);
+    if (!barcodeImage) {
+      Alert.alert("Attenzione", "Devi scattare una foto alla bolletta");
+      return;
+    }
 
-      // Create bill payment request
-      const paymentResponse = await API.post('/bill-payments', {
-        billId,
-        paymentMethod
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('billImage', {
+        uri: barcodeImage,
+        name: 'bill.jpg',
+        type: 'image/jpeg',
       });
 
-      const billPaymentId = paymentResponse.data.id;
+      await api.post('/bill-payments/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
-      // Upload images if provided
-      if (barcodeImage || qrCodeImage) {
-        const formData = new FormData();
-        
-        if (barcodeImage) {
-          formData.append('barcode', {
-            uri: barcodeImage,
-            type: 'image/jpeg',
-            name: 'barcode.jpg',
-          });
-        }
-
-        if (qrCodeImage) {
-          formData.append('qrCode', {
-            uri: qrCodeImage,
-            type: 'image/jpeg',
-            name: 'qrcode.jpg',
-          });
-        }
-
-        await API.post(
-          `/bill-payments/${billPaymentId}/upload-images`,
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
-        );
-      }
-
-      Alert.alert('Successo', 'Richiesta di pagamento inviata!');
-      setBarcodeImage(null);
-      setQrCodeImage(null);
+      Alert.alert("Successo", "Bolletta inviata! Un operatore la caricherà a breve.", [
+        { text: "OK", onPress: () => navigation.goBack() }
+      ]);
     } catch (error) {
-      Alert.alert('Errore', error.response?.data?.message || error.message);
+      Alert.alert("Errore", "Impossibile caricare l'immagine.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={{ flex: 1, padding: 15, backgroundColor: '#fff' }}>
-      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10 }}>
-        Paga la tua Bolletta
-      </Text>
+    <ScrollView style={{ padding: 20 }}>
+      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 10 }}>Pagamento Bollette</Text>
+      <Text style={{ color: '#666', marginBottom: 20 }}>Scansiona il codice a barre o scatta una foto leggibile della bolletta.</Text>
 
-      <View style={{ marginBottom: 15 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 10 }}>
-          Metodo di Pagamento:
-        </Text>
-        <TouchableOpacity
-          style={{
-            padding: 12,
-            borderRadius: 8,
-            backgroundColor: paymentMethod === 'cash' ? '#007AFF' : '#f0f0f0',
-            marginBottom: 10
-          }}
-          onPress={() => setPaymentMethod('cash')}
-        >
-          <Text style={{ color: paymentMethod === 'cash' ? '#fff' : '#000' }}>
-            💵 Contanti (Rider paga)
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={{
-            padding: 12,
-            borderRadius: 8,
-            backgroundColor: paymentMethod === 'prepaid' ? '#007AFF' : '#f0f0f0'
-          }}
-          onPress={() => setPaymentMethod('prepaid')}
-        >
-          <Text style={{ color: paymentMethod === 'prepaid' ? '#fff' : '#000' }}>
-            💳 Pre-pagamento
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ marginBottom: 15 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 10 }}>
-          Foto Barcode:
-        </Text>
-        {barcodeImage && (
-          <Image
-            source={{ uri: barcodeImage }}
-            style={{ width: '100%', height: 200, borderRadius: 8, marginBottom: 10 }}
-          />
+      <TouchableOpacity onPress={pickImage} style={{ height: 200, backgroundColor: '#eee', borderRadius: 15, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+        {barcodeImage ? (
+          <Image source={{ uri: barcodeImage }} style={{ width: '100%', height: '100%' }} />
+        ) : (
+          <Text>📸 Clicca per scattare foto</Text>
         )}
-        <TouchableOpacity
-          style={{
-            padding: 12,
-            backgroundColor: '#34C759',
-            borderRadius: 8,
-            alignItems: 'center'
-          }}
-          onPress={() => pickImage(setBarcodeImage)}
-        >
-          <Text style={{ color: '#fff', fontWeight: '600' }}>📷 Scatta Foto</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ marginBottom: 20 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 10 }}>
-          Foto QR Code:
-        </Text>
-        {qrCodeImage && (
-          <Image
-            source={{ uri: qrCodeImage }}
-            style={{ width: '100%', height: 200, borderRadius: 8, marginBottom: 10 }}
-          />
-        )}
-        <TouchableOpacity
-          style={{
-            padding: 12,
-            backgroundColor: '#34C759',
-            borderRadius: 8,
-            alignItems: 'center'
-          }}
-          onPress={() => pickImage(setQrCodeImage)}
-        >
-          <Text style={{ color: '#fff', fontWeight: '600' }}>📷 Scatta Foto</Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
 
       <TouchableOpacity
-        style={{
-          padding: 15,
-          backgroundColor: '#007AFF',
-          borderRadius: 8,
-          alignItems: 'center'
-        }}
         onPress={handleSubmit}
         disabled={loading}
+        style={{ backgroundColor: '#007AFF', marginTop: 30, padding: 15, borderRadius: 10, alignItems: 'center' }}
       >
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
-          {loading ? 'Invio...' : 'Invia Richiesta'}
-        </Text>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: 'bold' }}>Invia Bolletta</Text>}
       </TouchableOpacity>
     </ScrollView>
   );

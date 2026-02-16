@@ -50,35 +50,35 @@ const CATEGORY_EMOJI = {
 // Leaflet Map Component for Web
 const LeafletMapComponent = ({ orders, riderLocation }) => {
   const mapContainerId = 'rider-map-' + Math.random().toString(36).slice(2);
-  
+
   React.useEffect(() => {
     if (Platform.OS !== 'web') return;
-    
+
     // Load Leaflet CSS
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
     document.head.appendChild(link);
-    
+
     // Load Leaflet JS
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
     script.onload = () => {
       const L = window.L;
       if (!L || !document.getElementById(mapContainerId)) return;
-      
+
       const riderLat = riderLocation?.latitude || 40.7128;
       const riderLng = riderLocation?.longitude || -74.0060;
-      
+
       // Create map
       const map = L.map(mapContainerId).setView([riderLat, riderLng], 14);
-      
+
       // Add OpenStreetMap tiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors',
       }).addTo(map);
-      
+
       // Rider marker (green)
       const riderIcon = L.divIcon({
         className: 'rider-marker',
@@ -98,18 +98,18 @@ const LeafletMapComponent = ({ orders, riderLocation }) => {
         iconAnchor: [20, 20],
         popupAnchor: [0, -20],
       });
-      
+
       L.marker([riderLat, riderLng], { icon: riderIcon })
         .bindPopup('<b>🟢 La tua posizione</b>')
         .addTo(map)
         .openPopup();
-      
+
       // Order markers (blue)
       if (Array.isArray(orders) && orders.length > 0) {
         orders.forEach((order, index) => {
           const lat = riderLat + (index * 0.004) - 0.008;
           const lng = riderLng + (Math.sin(index) * 0.006);
-          
+
           const orderIcon = L.divIcon({
             className: 'order-marker',
             html: `<div style="
@@ -129,7 +129,7 @@ const LeafletMapComponent = ({ orders, riderLocation }) => {
             iconAnchor: [25, 25],
             popupAnchor: [0, -25],
           });
-          
+
           const popupContent = `
             <div style="font-size: 12px; font-family: sans-serif; min-width: 180px;">
               <b style="color: #1a1a2e;">🍔 ${order.items?.[0]?.name || 'Ordine'}</b><br>
@@ -143,12 +143,12 @@ const LeafletMapComponent = ({ orders, riderLocation }) => {
               </span>
             </div>
           `;
-          
+
           L.marker([lat, lng], { icon: orderIcon })
             .bindPopup(popupContent)
             .addTo(map);
         });
-        
+
         // Auto fit bounds
         const bounds = L.latLngBounds([[riderLat, riderLng]]);
         orders.forEach((_, index) => {
@@ -160,7 +160,7 @@ const LeafletMapComponent = ({ orders, riderLocation }) => {
       }
     };
     document.head.appendChild(script);
-    
+
     return () => {
       if (document.getElementById(mapContainerId)) {
         const mapElement = document.getElementById(mapContainerId);
@@ -170,7 +170,7 @@ const LeafletMapComponent = ({ orders, riderLocation }) => {
       }
     };
   }, [orders, riderLocation]);
-  
+
   return (
     <View style={styles.leafletMapContainer}>
       <View style={styles.leafletMapHeader}>
@@ -220,7 +220,7 @@ export default function RiderHomeScreen({ navigation }) {
       try {
         const activeOrders = await ordersAPI.getActiveRiderOrders();
         const inDelivery = activeOrders.find(o => o.status === 'in_transit' || o.status === 'pickup');
-        
+
         if (inDelivery) {
           setActiveDeliveryOrder(inDelivery);
           // Send location to backend
@@ -235,7 +235,7 @@ export default function RiderHomeScreen({ navigation }) {
 
     // Check immediately
     checkAndTrackDelivery();
-    
+
     // Then check every 30 seconds
     const trackingInterval = setInterval(checkAndTrackDelivery, 30000);
     return () => clearInterval(trackingInterval);
@@ -260,7 +260,7 @@ export default function RiderHomeScreen({ navigation }) {
   // Calculate ETA based on distance (simple formula: distance / 20 km/h)
   const calculateETA = (userLocation) => {
     if (!activeDeliveryOrder) return 20;
-    
+
     // For now, return fixed estimate - in production would calculate real distance
     // to delivery address using route optimization service
     const distance = calculateDistance(
@@ -319,10 +319,10 @@ export default function RiderHomeScreen({ navigation }) {
       }
 
       setLocation(userLocation);
-      
+
       const savedEarnings = await AsyncStorage.getItem('todayEarnings');
       if (savedEarnings) setTodayEarnings(parseFloat(savedEarnings));
-      
+
       await loadAvailableOrders();
       setLoading(false);
     } catch (error) {
@@ -350,22 +350,32 @@ export default function RiderHomeScreen({ navigation }) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 0.5 - Math.cos(dLat) / 2 + 
+    const a = 0.5 - Math.cos(dLat) / 2 +
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * (1 - Math.cos(dLon)) / 2;
     return (Math.sqrt(2 * R * R * a)).toFixed(1);
   };
 
   const sortOrdersByDistance = (orders) => {
     if (!location) return orders;
-    
+
     return orders
       .map(order => {
+        // Usiamo le coordinate reali del database (es. 41.8825, 12.6785)
+        // Se mancano, usiamo null per gestirli nel sort
+        const orderLat = order.rider_latitude || order.latitude;
+        const orderLng = order.rider_longitude || order.longitude;
+
+        if (!orderLat || !orderLng) {
+          return { ...order, distance: 9999 }; // Mettiamo in fondo gli ordini senza posizione
+        }
+
         const distance = calculateDistance(
-          location.latitude, 
+          location.latitude,
           location.longitude,
-          40.7150 + Math.random() * 0.02,
-          -74.0050 + Math.random() * 0.02
+          parseFloat(orderLat),
+          parseFloat(orderLng)
         );
+
         return { ...order, distance: parseFloat(distance) };
       })
       .sort((a, b) => a.distance - b.distance);
@@ -374,13 +384,13 @@ export default function RiderHomeScreen({ navigation }) {
   const handleAcceptOrder = async (orderId) => {
     try {
       await ordersAPI.acceptOrder(orderId);
-      
+
       const order = orders.find(o => o.id === orderId);
       const estimatedEarnings = order?.total_price * 0.15 || 2.5;
       const newTotal = todayEarnings + estimatedEarnings;
       setTodayEarnings(newTotal);
       await AsyncStorage.setItem('todayEarnings', newTotal.toString());
-      
+
       setAcceptedOrdersCount(acceptedOrdersCount + 1);
       Alert.alert('✅ Ordine Accettato!', `Guadagnerai ~€${estimatedEarnings.toFixed(2)}`);
       loadAvailableOrders();

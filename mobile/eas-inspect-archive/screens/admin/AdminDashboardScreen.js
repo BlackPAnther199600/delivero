@@ -174,6 +174,9 @@ const AdminDashboardScreen = ({ navigation, route }) => {
                 <View style={{ height: 400, borderRadius: 10, overflow: 'hidden' }}>
                   <MapView
                     style={{ flex: 1 }}
+                    provider={Platform.OS === 'android' ? 'google' : undefined} // Forza Google su Android
+                    showsUserLocation={true}       // <--- Mostra la posizione dell'Admin
+                    showsMyLocationButton={true}
                     initialRegion={{
                       latitude: 45.4642, // Milano Default
                       longitude: 9.1900,

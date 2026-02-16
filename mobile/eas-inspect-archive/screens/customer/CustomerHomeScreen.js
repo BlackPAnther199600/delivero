@@ -56,18 +56,43 @@ export default function CustomerHomeScreen({ navigation }) {
   const loadCustomerData = async () => {
     try {
       setRefreshing(true);
-      // Simulated data load
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Load favorites from AsyncStorage
-      const savedFavorites = await AsyncStorage.getItem('favorites');
+
+      // 1. Recupera la posizione dell'utente per le distanze a Roma
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      let currentUserLocation = null;
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({});
+        currentUserLocation = loc.coords;
+        // Aggiorna lo stato della posizione se lo hai definito
+        // setUserLocation(currentUserLocation); 
+      }
+
+      // 2. Chiamata API al tuo backend su Render
+      const response = await fetch('https://delivero-gyjx.onrender.com/api/restaurants');
+      const dbRestaurants = await response.json();
+
+      // 3. Arricchimento dati: calcola la distanza reale per ogni ristorante
+      const enrichedRestaurants = dbRestaurants.map(repo => {
+        const dist = currentUserLocation && repo.latitude
+          ? calculateDistance(currentUserLocation.latitude, currentUserLocation.longitude, repo.latitude, repo.longitude)
+          : repo.distance; // fallback al dato statico
+        return { ...repo, distance: dist };
+      });
+
+      setAllRestaurants(enrichedRestaurants);
+
+      // 4. Caricamento persistenza locale (Preferiti e Ordini)
+      const [savedFavorites, savedOrders] = await Promise.all([
+        AsyncStorage.getItem('favorites'),
+        AsyncStorage.getItem('recentOrders')
+      ]);
+
       if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
-      
-      // Load recent orders
-      const savedOrders = await AsyncStorage.getItem('recentOrders');
       if (savedOrders) setRecentOrders(JSON.parse(savedOrders));
+
     } catch (error) {
-      console.error('Error loading customer data:', error);
+      console.error('Errore nel caricamento dati reali:', error);
+      Alert.alert("Errore", "Impossibile connettersi al server Delivero.");
     } finally {
       setRefreshing(false);
     }
@@ -76,13 +101,13 @@ export default function CustomerHomeScreen({ navigation }) {
   const toggleFavorite = async (restaurant) => {
     const isFavorited = favorites.some(f => f.id === restaurant.id);
     let updatedFavorites;
-    
+
     if (isFavorited) {
       updatedFavorites = favorites.filter(f => f.id !== restaurant.id);
     } else {
       updatedFavorites = [...favorites, restaurant];
     }
-    
+
     setFavorites(updatedFavorites);
     await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
   };
@@ -98,15 +123,15 @@ export default function CustomerHomeScreen({ navigation }) {
 
   const findRestaurants = () => {
     let results = [...allRestaurants];
-    
+
     // Filter by search text
     if (searchText) {
-      results = results.filter(r => 
+      results = results.filter(r =>
         r.name.toLowerCase().includes(searchText.toLowerCase()) ||
         r.category.toLowerCase().includes(searchText.toLowerCase())
       );
     }
-    
+
     // Apply additional filters
     if (activeFilter === 'rating') {
       results.sort((a, b) => b.rating - a.rating);
@@ -115,12 +140,12 @@ export default function CustomerHomeScreen({ navigation }) {
     } else if (activeFilter === 'fast') {
       results = results.filter(r => parseInt(r.time) <= 20);
     }
-    
+
     return results;
   };
 
   const renderPromoCard = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.promoCard}
       onPress={() => applyCoupon(item)}
     >
@@ -162,7 +187,7 @@ export default function CustomerHomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <View style={styles.restaurantStats}>
           <View style={styles.statBadge}>
             <Text style={styles.statText}>⭐ {item.rating}</Text>
@@ -182,7 +207,7 @@ export default function CustomerHomeScreen({ navigation }) {
   const filteredRestaurants = findRestaurants();
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={loadCustomerData} />

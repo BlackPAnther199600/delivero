@@ -45,22 +45,34 @@ export default function RiderDashboard({ user }) {
   };
 
   const calculateDistance = (order) => {
-    if (!userLocation) return null;
-    // Semplice calcolo approssimativo della distanza (in km)
-    const lat1 = userLocation.lat;
-    const lon1 = userLocation.lng;
-    const lat2 = order.delivery_lat || 41.9028;
-    const lon2 = order.delivery_lng || 12.4964;
+    // 1. Verifica la posizione dell'utente (Rider)
+    // Assicurati che userLocation abbia .latitude e .longitude (non .lat e .lng)
+    const lat1 = userLocation?.latitude || userLocation?.lat;
+    const lon1 = userLocation?.longitude || userLocation?.lng;
+
+    if (!lat1 || !lon1) return "??";
+
+    // 2. Verifica le coordinate dell'ordine (Database)
+    // Controlliamo tutte le possibili varianti di nome per sicurezza
+    const lat2 = order.latitude || order.delivery_lat || order.rider_latitude;
+    const lon2 = order.longitude || order.delivery_lng || order.rider_longitude;
+
+    // Se l'ordine non ha coordinate nel DB, non inventarle (o ritorna null)
+    if (!lat2 || !lon2) return "N/A";
 
     const R = 6371; // Raggio della terra in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
+
+    const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return (R * c).toFixed(1);
+    const distance = R * c;
+
+    return distance.toFixed(1); // Restituisce es. "0.5"
   };
 
   const handleAcceptOrder = async (orderId) => {

@@ -319,14 +319,26 @@ export default function CustomerOrderTrackingScreen({ route, navigation }) {
         ) : (
           // Native MapView with Polyline
           <View style={{ height: 300, marginHorizontal: 12, borderRadius: 12, overflow: 'hidden' }}>
-            <MapView style={{ flex: 1 }} initialRegion={{
-              latitude: riderLocation.latitude,
-              longitude: riderLocation.longitude,
-              latitudeDelta: 0.02,
-              longitudeDelta: 0.02,
-            }}>
+            <MapView
+              style={{ flex: 1 }}
+              provider={MapView.PROVIDER_GOOGLE} // Forza l'uso di Google Maps su Android
+              showsUserLocation={true}           // ATTIVA il pallino blu della posizione attuale
+              followsUserLocation={true}         // Centra la mappa mentre ti muovi
+              showsMyLocationButton={true}       // Aggiunge il tasto "mirino" per tornare sulla posizione
+              initialRegion={{
+                latitude: riderLocation.latitude,
+                longitude: riderLocation.longitude,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              }}
+            >
+              {/* Marker del Rider (posizione calcolata dal backend) */}
               <Marker coordinate={riderLocation} title="Rider" />
+
+              {/* Marker del Cliente */}
               <Marker coordinate={customerLocation} title="Cliente" />
+
+              {/* Storico del percorso */}
               {trackHistory.length > 0 && (
                 <Polyline coordinates={trackHistory} strokeColor="#ef4444" strokeWidth={4} />
               )}
