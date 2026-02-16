@@ -402,13 +402,31 @@ export const updateRiderLocation = async (req, res) => {
 export const getTrackHistory = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate order exists and get user_id
+    const orderCheck = await db.query(
+      'SELECT id, user_id FROM orders WHERE id = $1',
+      [id]
+    );
+
+    if (orderCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Ordine non trovato' });
+    }
+
+    // Get tracking history
     const result = await db.query(
       `SELECT latitude, longitude, recorded_at FROM order_tracks WHERE order_id = $1 ORDER BY recorded_at ASC`,
       [id]
     );
-    res.status(200).json(result.rows);
+
+    // Return empty array if no tracking data found
+    res.status(200).json(result.rows || []);
   } catch (error) {
-    res.status(500).json({ message: 'Errore nel recupero storico tracciamento', error: error.message });
+    console.error('Error in getTrackHistory:', error);
+    res.status(500).json({
+      message: 'Errore nel recupero storico tracciamento',
+      error: error.message
+    });
   }
 };
 

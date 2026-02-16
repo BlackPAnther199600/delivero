@@ -198,11 +198,21 @@ export default function ManagerTrackingDashboard() {
     const openTrack = async (orderId) => {
         try {
             const pts = await ordersAPI.getTrackHistory(orderId);
+            // Ensure pts is an array
+            const trackPoints = Array.isArray(pts) ? pts : [];
+
+            if (trackPoints.length === 0) {
+                console.warn(`No tracking history found for order ${orderId}`);
+                alert('Nessuna cronologia di tracciamento disponibile');
+                return;
+            }
+
             // normalize points to [lat,lng]
-            const poly = pts.map(p => [parseFloat(p.latitude), parseFloat(p.longitude)]);
+            const poly = trackPoints.map(p => [parseFloat(p.latitude), parseFloat(p.longitude)]);
             setSelectedTrack({ orderId, poly });
         } catch (e) {
             console.error('Could not fetch track history', e);
+            alert(`Errore nel caricamento della cronologia: ${e.message || 'Riprova più tardi'}`);
         }
     };
 

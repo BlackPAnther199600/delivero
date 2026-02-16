@@ -61,6 +61,17 @@ CREATE TABLE IF NOT EXISTS payments (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create order_tracks table for tracking rider location history
+CREATE TABLE IF NOT EXISTS order_tracks (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  rider_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  latitude DECIMAL(10, 8) NOT NULL,
+  longitude DECIMAL(11, 8) NOT NULL,
+  recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ========================================
 -- 2. RESTAURANTS & MENU TABLES
 -- ========================================
@@ -326,6 +337,11 @@ CREATE INDEX IF NOT EXISTS idx_bills_due_date ON bills(due_date);
 -- Payments indexes
 CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
 CREATE INDEX IF NOT EXISTS idx_payments_stripe_id ON payments(stripe_payment_id);
+
+-- Order tracks indexes
+CREATE INDEX IF NOT EXISTS idx_order_tracks_order_id ON order_tracks(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_tracks_rider_id ON order_tracks(rider_id);
+CREATE INDEX IF NOT EXISTS idx_order_tracks_recorded_at ON order_tracks(recorded_at);
 
 -- Bill Payments indexes
 CREATE INDEX IF NOT EXISTS idx_bill_payments_user_id ON bill_payments(user_id);
