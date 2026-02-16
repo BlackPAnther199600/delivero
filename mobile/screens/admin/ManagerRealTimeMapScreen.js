@@ -11,6 +11,7 @@ const SOCKET_URL = 'https://delivero-gyjx.onrender.com';
 export default function ManagerRealTimeMapScreen() {
     const [riders, setRiders] = useState({});
     const [loading, setLoading] = useState(true);
+    const [mapKey, setMapKey] = useState(0); // Force WebView remount
     const [region, setRegion] = useState({
         latitude: 41.880025,
         longitude: 12.67594,
@@ -22,14 +23,28 @@ export default function ManagerRealTimeMapScreen() {
         try {
             console.log('[ManagerRealTimeMap] fallback fetch /orders/active/all');
             const data = await makeRequest('/orders/active/all', { method: 'GET' });
+            console.log('[ManagerRealTimeMap] raw response:', data);
+
             const list = Array.isArray(data) ? data : (data?.data || []);
+            console.log('[ManagerRealTimeMap] parsed list length:', list.length);
+            if (list.length > 0) {
+                console.log('[ManagerRealTimeMap] first item:', list[0]);
+            }
 
             const next = {};
             for (const o of list) {
-                if (o?.rider_latitude == null || o?.rider_longitude == null) continue;
+                console.log('[ManagerRealTimeMap] processing order:', o);
+                if (o?.rider_latitude == null || o?.rider_longitude == null) {
+                    console.log('[ManagerRealTimeMap] skipping order - missing coords:', o.id);
+                    continue;
+                }
                 const lat = parseFloat(o.rider_latitude);
                 const lng = parseFloat(o.rider_longitude);
-                if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+                console.log('[ManagerRealTimeMap] parsed coords:', lat, lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    console.log('[ManagerRealTimeMap] skipping order - invalid coords:', o.id);
+                    continue;
+                }
                 next[String(o.id)] = {
                     orderId: o.id,
                     lat,
@@ -37,12 +52,22 @@ export default function ManagerRealTimeMapScreen() {
                     eta_minutes: o.eta_minutes,
                     status: o.status,
                 };
+                console.log('[ManagerRealTimeMap] added rider for order:', o.id);
             }
 
             const nextCount = Object.keys(next).length;
-            console.log('[ManagerRealTimeMap] fallback active orders with coords', nextCount);
+            console.log('[ManagerRealTimeMap] final riders count:', nextCount);
+            console.log('[ManagerRealTimeMap] riders data:', next);
             if (nextCount > 0) {
-                setRiders(prev => ({ ...prev, ...next }));
+                console.log('[ManagerRealTimeMap] setting riders state...');
+                setRiders(prev => {
+                    console.log('[ManagerRealTimeMap] previous riders:', prev);
+                    const updated = { ...prev, ...next };
+                    console.log('[ManagerRealTimeMap] updated riders:', updated);
+                    // Force WebView remount to show new markers
+                    setMapKey(k => k + 1);
+                    return updated;
+                });
             }
 
             setLoading(false);
@@ -208,9 +233,12 @@ export default function ManagerRealTimeMapScreen() {
         `;
     };
 
+    const webViewRef = React.createRef();
+
     return (
         <View style={styles.container}>
             <WebView
+                key={mapKey} // Force complete remount when riders change
                 style={styles.map}
                 source={{ html: generateMapHtml() }}
                 javaScriptEnabled={true}
