@@ -19,14 +19,34 @@
     },
     "android": {
       "package": "com.anonymous.deliveromobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "INTERNET"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FF6B00"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "IL_TUO_API_KEY_GOOGLE_MAPS"
+        }
       }
     },
     "ios": {
       "bundleIdentifier": "com.anonymous.deliveromobile",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Delivero ha bisogno della tua posizione per mostrare i ristoranti vicini e tracciare le consegne.",
+        "NSLocationAlwaysUsageDescription": "Delivero traccia la tua posizione per aggiornare i clienti sullo stato della consegna.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
+      }
     },
     "extra": {
       "eas": {
@@ -41,6 +61,12 @@
           "android": {
             "kotlinVersion": "1.9.25"
           }
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Consenti a Delivero di usare la tua posizione."
         }
       ],
       "expo-system-ui"

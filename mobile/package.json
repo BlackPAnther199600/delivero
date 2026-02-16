@@ -25,7 +25,7 @@
     "expo-crypto": "~14.0.2",
     "expo-device": "~7.0.2",
     "expo-linear-gradient": "~14.0.2",
-    "expo-location": "~18.0.5",
+    "expo-location": "~18.0.10",
     "expo-notifications": "~0.29.11",
     "expo-system-ui": "~4.0.9",
     "https-browserify": "^1.0.0",
