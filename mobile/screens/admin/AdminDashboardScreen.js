@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   activeTabText: { color: '#fff' },
   content: { flex: 1, padding: 15 },
   welcome: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, color: '#1a1a2e' },
-  card: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 2 },
+  card: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 2, borderLeftWidth: 5, borderLeftColor: '#FF6B00' },
   statCard: { backgroundColor: '#fff', padding: 20, borderRadius: 12, alignItems: 'center', marginBottom: 15, borderLeftWidth: 5, borderLeftColor: '#FF6B00' },
   statValue: { fontSize: 24, fontWeight: 'bold', color: '#1a1a2e' },
   statLabel: { color: '#666' },
