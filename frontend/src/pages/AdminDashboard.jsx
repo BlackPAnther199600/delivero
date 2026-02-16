@@ -79,17 +79,18 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const [statsRes, financeRes, metricsRes, ticketsRes] = await Promise.all([
+      const [stats, finance, metrics, tickets] = await Promise.all([
         adminAPI.getStats(),
         adminAPI.getFinanceReport(),
         adminAPI.getServiceMetrics(),
         adminAPI.getTicketStats()
       ]);
-      setStats(statsRes.data);
-      setFinance(financeRes.data);
-      setMetrics(metricsRes.data);
-      setTicketStats(ticketsRes.data);
+      setStats(stats);
+      setFinance(finance);
+      setMetrics(metrics);
+      setTicketStats(tickets);
     } catch (err) {
+      console.error('Error loading dashboard data:', err);
       setError(err.response?.data?.message || "Error loading dashboard data");
     } finally {
       setLoading(false);
@@ -355,15 +356,19 @@ export default function AdminDashboard() {
         <div>
           <div style={styles.gridCards}>
             <div style={styles.statCard}>
-              <div style={styles.statValue}>€{finance.totalRevenue?.toFixed(2)}</div>
+              <div style={styles.statValue}>
+                €{finance.totalRevenue ? Number(finance.totalRevenue).toFixed(2) : '0.00'}
+              </div>
               <div style={styles.statLabel}>Total Revenue</div>
             </div>
             <div style={styles.statCard}>
-              <div style={styles.statValue}>{finance.billPayments?.total}</div>
+              <div style={styles.statValue}>{finance.billPayments?.total || 0}</div>
               <div style={styles.statLabel}>Bill Payments</div>
             </div>
             <div style={styles.statCard}>
-              <div style={styles.statValue}>€{finance.billPayments?.amount?.toFixed(2)}</div>
+              <div style={styles.statValue}>
+                €{finance.billPayments?.amount ? Number(finance.billPayments.amount).toFixed(2) : '0.00'}
+              </div>
               <div style={styles.statLabel}>Bills Total</div>
             </div>
           </div>
@@ -382,7 +387,7 @@ export default function AdminDashboard() {
                 <tr key={idx}>
                   <td style={styles.tableCell}>{pm.payment_method}</td>
                   <td style={styles.tableCell}>{pm.count}</td>
-                  <td style={styles.tableCell}>€{pm.total?.toFixed(2)}</td>
+                  <td style={styles.tableCell}>€{pm.total ? Number(pm.total).toFixed(2) : '0.00'}</td>
                 </tr>
               ))}
             </tbody>

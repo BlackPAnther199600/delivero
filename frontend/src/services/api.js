@@ -111,12 +111,30 @@ export const paymentsAPI = {
 
 // Admin
 export const adminAPI = {
-  getStats: () => apiClient.get('/admin/stats'),
-  getAllOrders: () => apiClient.get('/admin/orders'),
-  getAllUsers: () => apiClient.get('/admin/users'),
-  getFinanceReport: () => apiClient.get('/admin/finance'),
-  getServiceMetrics: () => apiClient.get('/admin/metrics'),
-  getTicketStats: () => apiClient.get('/admin/tickets/stats'),
+  getStats: async () => {
+    const res = await apiClient.get('/admin/stats');
+    return res.data;
+  },
+  getAllOrders: async () => {
+    const res = await apiClient.get('/admin/orders');
+    return res.data;
+  },
+  getAllUsers: async () => {
+    const res = await apiClient.get('/admin/users');
+    return res.data;
+  },
+  getFinanceReport: async () => {
+    const res = await apiClient.get('/admin/finance');
+    return res.data;
+  },
+  getServiceMetrics: async () => {
+    const res = await apiClient.get('/admin/metrics');
+    return res.data;
+  },
+  getTicketStats: async () => {
+    const res = await apiClient.get('/admin/tickets/stats');
+    return res.data;
+  },
   updateUserRole: (userId, newRole) => apiClient.put(`/admin/users/${userId}/role`, { newRole }),
   deleteUser: (userId) => apiClient.delete(`/admin/users/${userId}`)
 };

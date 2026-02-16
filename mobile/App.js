@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { userAPI } from './services/api';
 import { CartProvider } from './context/CartContext';
 
@@ -64,9 +65,14 @@ function CustomerTabs({ onLogout }) {
         headerShown: true,
         tabBarActiveTintColor: '#FF6B00',
         tabBarInactiveTintColor: '#999',
-        headerStyle: {
-          backgroundColor: '#FF6B00',
-        },
+        headerBackground: () => (
+          <LinearGradient
+            colors={['#FF6B00', '#FF8C00']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+          />
+        ),
         headerTintColor: '#fff',
         headerTitleStyle: {
           fontWeight: 'bold',
@@ -156,9 +162,14 @@ function CustomerStack({ onLogout }) {
         component={RestaurantDetailScreen}
         options={{
           title: '🍽️ Menu',
-          headerStyle: {
-            backgroundColor: '#FF6B00',
-          },
+          headerBackground: () => (
+            <LinearGradient
+              colors={['#FF6B00', '#FF8C00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1 }}
+            />
+          ),
           headerTintColor: '#fff',
           headerTitleStyle: {
             fontWeight: 'bold',
@@ -170,9 +181,14 @@ function CustomerStack({ onLogout }) {
         component={CustomerOrderTrackingScreen}
         options={{
           title: '📍 Tracciamento Ordine',
-          headerStyle: {
-            backgroundColor: '#FF6B00',
-          },
+          headerBackground: () => (
+            <LinearGradient
+              colors={['#FF6B00', '#FF8C00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1 }}
+            />
+          ),
           headerTintColor: '#fff',
           headerTitleStyle: {
             fontWeight: 'bold',
@@ -184,9 +200,14 @@ function CustomerStack({ onLogout }) {
         component={OrderTrackingLiveScreen}
         options={{
           title: '🗺️ Tracking Live',
-          headerStyle: {
-            backgroundColor: '#FF6B00',
-          },
+          headerBackground: () => (
+            <LinearGradient
+              colors={['#FF6B00', '#FF8C00']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1 }}
+            />
+          ),
           headerTintColor: '#fff',
           headerTitleStyle: {
             fontWeight: 'bold',
@@ -247,9 +268,14 @@ function ManagerStack({ token, user, onLogout }) {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerStyle: {
-          backgroundColor: '#FF6B00',
-        },
+        headerBackground: () => (
+          <LinearGradient
+            colors={['#FF6B00', '#FF8C00']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+          />
+        ),
         headerTintColor: '#fff',
         headerTitleStyle: {
           fontWeight: 'bold',
@@ -339,6 +365,23 @@ export default function App() {
 
     bootstrapAsync();
 
+    // Listener per rilevare i cambiamenti di AsyncStorage (login)
+    const checkTokenPeriodically = setInterval(async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const user = await AsyncStorage.getItem('user');
+        const parsedUser = user ? JSON.parse(user) : null;
+
+        // Se il token è stato salvato, aggiorna lo stato
+        if (token && parsedUser && !state.userToken) {
+          console.log('🔄 Token rilevato dopo login, aggiornamento stato...');
+          dispatch({ type: 'RESTORE_TOKEN', token, user: parsedUser });
+        }
+      } catch (e) {
+        console.error('Error checking token:', e);
+      }
+    }, 500); // Controlla ogni 500ms
+
     // Try to register push token for logged in user
     const registerPush = async () => {
       try {
@@ -376,6 +419,11 @@ export default function App() {
     };
 
     registerPush();
+
+    // Cleanup function per cancellare l'intervallo al unmount
+    return () => {
+      clearInterval(checkTokenPeriodically);
+    };
   }, []);
 
   if (state.isLoading) {
@@ -385,6 +433,14 @@ export default function App() {
       </View>
     );
   }
+
+  // Debug log
+  console.log('🔍 App state:', {
+    isLoading: state.isLoading,
+    hasToken: !!state.userToken,
+    userRole: state.user?.role,
+    userEmail: state.user?.email,
+  });
 
   return (
     <CartProvider>

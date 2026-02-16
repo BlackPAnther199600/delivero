@@ -28,12 +28,14 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     try {
       const response = await authAPI.login(email, password);
-      
-      // Il Navigation avviene automaticamente grazie al state management in App.js
-      Alert.alert('Successo', `Benvenuto ${response.user.name}!`);
+      console.log('✅ Login riuscito, token salvato');
+
+      // Breve pausa per permettere al listener di AsyncStorage di rilevare il cambio
+      setTimeout(() => {
+        Alert.alert('Successo', `Benvenuto ${response.user.name}!`);
+      }, 100);
     } catch (error) {
       Alert.alert('Errore Login', error.message || 'Credenziali non valide');
-    } finally {
       setLoading(false);
     }
   };

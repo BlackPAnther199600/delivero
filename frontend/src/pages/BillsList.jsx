@@ -13,9 +13,12 @@ export default function BillsList() {
   const fetchBills = async () => {
     try {
       const response = await billsAPI.getAll();
-      setBills(response.data);
+      // Backend ritorna direttamente l'array, non wrappato in { data }
+      const billsData = Array.isArray(response) ? response : response.data || [];
+      setBills(billsData);
       setLoading(false);
     } catch (err) {
+      console.error('Errore caricamento bollette:', err);
       setError(err.message);
       setLoading(false);
     }
@@ -79,9 +82,11 @@ export default function BillsList() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0.5rem 0' }}>
-                    €{Number(bill.amount).toFixed(2)}
+                    €{bill.amount ? Number(bill.amount).toFixed(2) : '0.00'}
                   </p>
-                  <span className="badge badge-warning">Pendente</span>
+                  <span className={`badge ${bill.paid ? 'badge-success' : 'badge-warning'}`}>
+                    {bill.paid ? '✅ Pagata' : '⏳ Pendente'}
+                  </span>
                 </div>
               </div>
               <div className="card-footer">
