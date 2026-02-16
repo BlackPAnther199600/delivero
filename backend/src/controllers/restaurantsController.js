@@ -26,7 +26,7 @@ export const getRestaurants = async (req, res) => {
         SELECT DISTINCT restaurant_id FROM restaurant_categories 
         WHERE name ILIKE $${params.length + 1} AND is_active = true
       )`;
-            params.push(`%${category}%`);
+            params.push(category);
         }
 
         if (rating_min) {
@@ -93,10 +93,10 @@ export const getRestaurant = async (req, res) => {
               SELECT json_agg(
                 json_build_object('id', id, 'name', name, 'price', price, 'type', type)
               ) FROM menu_customizations 
-              WHERE menu_item_id = mi.id
-            ), json_build_array())
+              WHERE menu_item_id = mi.id AND is_active = true
+            ), '[]'::json)
           ) ORDER BY mi.name
-        ) FILTER (WHERE mi.id IS NOT NULL), json_build_array()) as items
+        ) FILTER (WHERE mi.id IS NOT NULL), '[]'::json) as items
        FROM restaurant_categories rc
        LEFT JOIN menu_items mi ON rc.id = mi.category_id AND mi.is_active = true
        WHERE rc.restaurant_id = $1 AND rc.is_active = true
@@ -107,22 +107,30 @@ export const getRestaurant = async (req, res) => {
 
         const menu = menuRes.rows;
 
-        // Get recent reviews
-        const reviewsRes = await db.query(
-            `SELECT id, food_rating, delivery_rating, comment, photos_urls, created_at, author_name
-       FROM reviews
-       WHERE restaurant_id = $1 AND is_verified = true
-       ORDER BY created_at DESC
-       LIMIT 10`,
-            [id]
-        );
+        // Get recent reviews (handle case where reviews table doesn't exist)
+        let reviews = [];
+        try {
+            const reviewsRes = await db.query(
+                `SELECT id, food_rating, delivery_rating, comment, photos_urls, created_at, author_name
+           FROM reviews
+           WHERE restaurant_id = $1 AND is_verified = true
+           ORDER BY created_at DESC
+           LIMIT 10`,
+                [id]
+            );
+            reviews = reviewsRes.rows || [];
+        } catch (reviewError) {
+            console.log('Reviews table not available yet:', reviewError.message);
+            reviews = [];
+        }
 
         res.json({
             ...restaurant,
             menu,
-            recent_reviews: reviewsRes.rows
+            recent_reviews: reviews
         });
     } catch (error) {
+        console.error('Error fetching restaurant:', error);
         res.status(500).json({ message: 'Error fetching restaurant', error: error.message });
     }
 };
@@ -131,11 +139,10 @@ export const getRestaurant = async (req, res) => {
 export const getCategories = async (req, res) => {
     try {
         const result = await db.query(
-            `SELECT category 
+            `SELECT DISTINCT category 
              FROM restaurant_categories 
              WHERE is_active = true AND category IS NOT NULL
-             GROUP BY category 
-             ORDER BY MIN(display_order) ASC`
+             ORDER BY category ASC`
         );
         res.json(result.rows.map(r => r.category));
     } catch (error) {

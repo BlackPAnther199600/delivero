@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import helmet from "helmet";
 import http from "http";
+import logger from "./utils/logger.js";
+import { generalLimiter, authLimiter } from "./middleware/rateLimiter.js";
 import authRoutes from "./routes/auth.js";
 import orderRoutes from "./routes/orders.js";
 import billRoutes from "./routes/bills.js";
@@ -20,6 +23,11 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
+// Security middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Initialize Socket.IO
 initializeSocket(server);
@@ -56,7 +64,10 @@ app.use(cors(corsOptions));
 // assicurati che OPTIONS venga gestita prima dei route handlers
 app.options("*", cors(corsOptions));
 
-app.use(express.json());
+// Rate limiting
+app.use(generalLimiter);
+
+app.use(express.json({ limit: '10mb' }));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -64,7 +75,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/restaurants", restaurantsRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/bills", billRoutes);
@@ -78,17 +89,18 @@ app.use("/api/tickets", ticketsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Errore del server", error: err.message });
+  logger.error('Unhandled error:', err);
+  res.status(500).json({ message: "Errore del server", error: process.env.NODE_ENV === 'development' ? err.message : undefined });
 });
 
 // 404 handler
 app.use((req, res) => {
+  logger.warn(`Route not found: ${req.method} ${req.path}`);
   res.status(404).json({ message: "Route not found" });
 });
 
-server.listen(process.env.PORT || 5000, () =>
-  console.log(`Server running on port ${process.env.PORT || 5000}`)
-);
+server.listen(process.env.PORT || 5000, () => {
+  logger.info(`Server running on port ${process.env.PORT || 5000}`);
+});
 
 export default server;
