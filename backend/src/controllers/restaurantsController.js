@@ -9,10 +9,10 @@ export const getRestaurants = async (req, res) => {
       SELECT 
         id, name, rating, estimated_delivery_time as delivery_time, 
         delivery_cost, image_url, description, address, 
-        latitude, longitude, is_open, 
+        latitude, longitude, is_open, is_active, 
         (SELECT COUNT(*) FROM reviews WHERE restaurant_id = restaurants.id) as review_count
       FROM restaurants
-      WHERE is_active = true
+      WHERE restaurants.is_active = true
     `;
         const params = [];
 
@@ -65,7 +65,7 @@ export const getRestaurant = async (req, res) => {
               delivery_cost, image_url, description, address, 
               latitude, longitude, is_open, phone, website
        FROM restaurants 
-       WHERE id = $1 AND is_active = true`,
+       WHERE id = $1 AND restaurants.is_active = true`,
             [id]
         );
 
