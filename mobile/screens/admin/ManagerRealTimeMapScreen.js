@@ -233,8 +233,6 @@ export default function ManagerRealTimeMapScreen() {
         `;
     };
 
-    const webViewRef = React.createRef();
-
     return (
         <View style={styles.container}>
             <WebView
