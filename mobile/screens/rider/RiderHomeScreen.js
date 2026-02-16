@@ -429,9 +429,6 @@ export default function RiderHomeScreen({ navigation }) {
           <Text style={styles.headerTitle}>🚚 Ordini Disponibili</Text>
           <Text style={styles.headerSubtitle}>Guadagna ritirando e consegnando</Text>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutIcon}>🚪</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Stats Dashboard */}

@@ -184,9 +184,6 @@ export default function RiderActiveScreen({ navigation }) {
             <Text style={styles.trackingBadge}>📍 Tracciamento GPS attivo</Text>
           )}
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>🚪</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Stats Cards */}

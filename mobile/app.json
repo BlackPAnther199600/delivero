@@ -4,6 +4,7 @@
     "slug": "delivero",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "sdkVersion": "52.0.0",
     "platforms": [
@@ -11,8 +12,21 @@
       "android",
       "web"
     ],
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B00"
+    },
     "android": {
-      "package": "com.anonymous.deliveromobile"
+      "package": "com.anonymous.deliveromobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FF6B00"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.deliveromobile",
+      "supportsTablet": true
     },
     "extra": {
       "eas": {

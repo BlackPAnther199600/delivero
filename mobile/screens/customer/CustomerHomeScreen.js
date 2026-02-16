@@ -264,9 +264,6 @@ export default function CustomerHomeScreen({ navigation }) {
           <Text style={styles.title}>🍽️ Cosa vuoi ordinare?</Text>
           <Text style={styles.subtitle}>Città</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>🚪</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
