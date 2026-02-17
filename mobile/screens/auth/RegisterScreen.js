@@ -9,9 +9,10 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
-  Picker,
   ScrollView,
 } from 'react-native';
+// 1. IMPORTA IL PICKER DA QUI
+import { Picker } from '@react-native-picker/picker';
 import { authAPI } from '../../services/api';
 
 export default function RegisterScreen({ navigation }) {
@@ -95,11 +96,12 @@ export default function RegisterScreen({ navigation }) {
           <View style={styles.formGroup}>
             <Text style={styles.label}>👥 Tipo di Account</Text>
             <View style={styles.pickerContainer}>
+              {/* 2. IL COMPONENTE ORA USA LA LIBRERIA ESTERNA */}
               <Picker
                 selectedValue={role}
-                onValueChange={setRole}
+                onValueChange={(itemValue) => setRole(itemValue)}
                 style={styles.picker}
-                enabled={!loading}
+                enabled={!loading} // Su Android funziona correttamente qui
               >
                 <Picker.Item label="👤 Consumatore" value="customer" />
                 <Picker.Item label="🚗 Rider" value="rider" />
@@ -226,9 +228,11 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 10,
     overflow: 'hidden',
+    backgroundColor: '#F8F9FA',
   },
   picker: {
-    backgroundColor: '#F8F9FA',
+    height: 55, // Su Android è meglio definire un'altezza
+    width: '100%',
   },
   button: {
     backgroundColor: '#FF6B00',
