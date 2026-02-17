@@ -378,24 +378,6 @@ export default function App() {
     let lastToken = null;
     let lastUser = null;
 
-    const checkTokenPeriodically = setInterval(async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const user = await AsyncStorage.getItem('user');
-        const parsedUser = user ? JSON.parse(user) : null;
-
-        // Aggiorna solo se il token è cambiato
-        if (token && parsedUser && token !== lastToken) {
-          console.log('🔄 Token rilevato dopo login, aggiornamento stato...');
-          dispatch({ type: 'RESTORE_TOKEN', token, user: parsedUser });
-          lastToken = token;
-          lastUser = parsedUser;
-        }
-      } catch (e) {
-        console.error('Error checking token:', e);
-      }
-    }, 2000); // Controlla ogni 2 secondi invece di 500ms
-
     // Try to register push token for logged in user
     const registerPush = async () => {
       try {
@@ -434,10 +416,6 @@ export default function App() {
 
     registerPush();
 
-    // Cleanup function per cancellare l'intervallo al unmount
-    return () => {
-      clearInterval(checkTokenPeriodically);
-    };
   }, []);
 
   if (state.isLoading) {
