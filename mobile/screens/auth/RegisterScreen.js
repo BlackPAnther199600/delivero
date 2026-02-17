@@ -11,8 +11,6 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-// 1. IMPORTA IL PICKER DA QUI
-import { Picker } from '@react-native-picker/picker';
 import { authAPI } from '../../services/api';
 
 export default function RegisterScreen({ navigation }) {
@@ -20,8 +18,7 @@ export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('customer');
-
+  const [role, setRole] = useState('customer'); // 'customer' o 'rider'
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -42,7 +39,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await authAPI.register(email, password, name, role);
+      await authAPI.register(email, password, name, role);
       Alert.alert('Successo', 'Account creato! Accedi ora');
       navigation.navigate('Login');
     } catch (error) {
@@ -93,19 +90,31 @@ export default function RegisterScreen({ navigation }) {
             />
           </View>
 
+          {/* Selezione Ruolo Unificata (iOS & Android) */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>👥 Tipo di Account</Text>
-            <View style={styles.pickerContainer}>
-              {/* 2. IL COMPONENTE ORA USA LA LIBRERIA ESTERNA */}
-              <Picker
-                selectedValue={role}
-                onValueChange={(itemValue) => setRole(itemValue)}
-                style={styles.picker}
-                enabled={!loading} // Su Android funziona correttamente qui
+            <View style={styles.roleContainer}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={[styles.roleButton, role === 'customer' && styles.roleButtonActive]}
+                onPress={() => setRole('customer')}
+                disabled={loading}
               >
-                <Picker.Item label="👤 Consumatore" value="customer" />
-                <Picker.Item label="🚗 Rider" value="rider" />
-              </Picker>
+                <Text style={[styles.roleText, role === 'customer' && styles.roleTextActive]}>
+                  Cliente
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={[styles.roleButton, role === 'rider' && styles.roleButtonActive]}
+                onPress={() => setRole('rider')}
+                disabled={loading}
+              >
+                <Text style={[styles.roleText, role === 'rider' && styles.roleTextActive]}>
+                  Rider
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -159,19 +168,6 @@ export default function RegisterScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Info */}
-        <View style={styles.info}>
-          <Text style={styles.infoText}>
-            ✅ Registrazione standard: creerai un account cliente (o rider se abilitato)
-          </Text>
-          <Text style={styles.infoText}>
-            ✅ I consumatori ordineranno da app mobile
-          </Text>
-          <Text style={styles.infoText}>
-            ✅ I rider consegneranno ordini da app mobile
-          </Text>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -223,16 +219,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#F8F9FA',
   },
-  pickerContainer: {
+  roleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  roleButton: {
+    flex: 1,
     borderWidth: 2,
     borderColor: '#E0E0E0',
     borderRadius: 10,
-    overflow: 'hidden',
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginHorizontal: 5,
     backgroundColor: '#F8F9FA',
   },
-  picker: {
-    height: 55, // Su Android è meglio definire un'altezza
-    width: '100%',
+  roleButtonActive: {
+    borderColor: '#FF6B00',
+    backgroundColor: '#FFF5EE',
+  },
+  roleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  roleTextActive: {
+    color: '#FF6B00',
   },
   button: {
     backgroundColor: '#FF6B00',
@@ -264,18 +275,5 @@ const styles = StyleSheet.create({
   linkBold: {
     color: '#FF6B00',
     fontWeight: '600',
-  },
-  info: {
-    backgroundColor: '#F0F8FF',
-    borderRadius: 10,
-    padding: 15,
-    borderLeftWidth: 4,
-    borderLeftColor: '#0066FF',
-  },
-  infoText: {
-    fontSize: 13,
-    color: '#0066FF',
-    marginBottom: 8,
-    fontWeight: '500',
   },
 });
